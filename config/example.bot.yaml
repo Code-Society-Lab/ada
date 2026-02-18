@@ -1,0 +1,10 @@
+HOMESERVER: "https://matrix.org"
+USERNAME: "@gracebot:matrix.org"
+TOKEN: ""
+PREFIX: "!"
+
+APP:
+  EXTENSIONS:
+    - bot.extensions.core.ping
+    - bot.extensions.core.welcome
+    - bot.extensions.fun.echo
