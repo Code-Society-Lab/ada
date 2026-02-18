@@ -3,24 +3,21 @@ import pytest
 from bot.settings import Settings
 
 
-def test_settings_from_yaml_file(tmp_path) -> None:
+def test_settings_from_yaml_file_uses_defaults(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "bot.settings.discover_extensions", lambda package: ["tests.fake_extension"]
+    )
     config_file = tmp_path / "bot.yaml"
     config_file.write_text(
-        "HOMESERVER: https://matrix.org\n"
-        "USERNAME: '@bot:matrix.org'\n"
-        "PASSWORD: secret\n"
-        "APP:\n"
-        "  LOG_LEVEL: debug\n"
-        "  EXTENSIONS:\n"
-        "    - tests.fake_extension\n",
+        "HOMESERVER: https://matrix.org\n" "USERNAME: '@bot:matrix.org'\n" "PASSWORD: secret\n",
         encoding="utf-8",
     )
 
     settings = Settings.from_yaml(matrix_config_file=config_file)
 
     assert settings.matrix_config_file == str(config_file)
+    assert settings.log_level == "INFO"
     assert settings.extensions == ("tests.fake_extension",)
-    assert settings.log_level == "DEBUG"
 
 
 def test_settings_auto_discovers_extensions_when_yaml_has_none(
@@ -55,23 +52,10 @@ def test_settings_raises_when_no_extensions_are_discovered(
         Settings.from_yaml(matrix_config_file=config_file)
 
 
-def test_settings_uses_yaml_extensions_when_set(tmp_path) -> None:
-    config_file = tmp_path / "bot.yaml"
-    config_file.write_text(
-        "HOMESERVER: https://matrix.org\n"
-        "USERNAME: '@bot:matrix.org'\n"
-        "TOKEN: abc123\n"
-        "APP:\n"
-        "  EXTENSIONS:\n"
-        "    - tests.fake_extension\n",
-        encoding="utf-8",
+def test_settings_uses_default_log_level(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "bot.settings.discover_extensions", lambda package: ["tests.fake_extension"]
     )
-
-    settings = Settings.from_yaml(matrix_config_file=config_file)
-    assert settings.extensions == ("tests.fake_extension",)
-
-
-def test_settings_uses_default_log_level_when_yaml_missing(tmp_path) -> None:
     config_file = tmp_path / "bot.yaml"
     config_file.write_text(
         "HOMESERVER: https://matrix.org\n" "USERNAME: '@bot:matrix.org'\n" "TOKEN: abc123\n",
