@@ -13,14 +13,14 @@ logger = logging.getLogger(__name__)
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Grace-style Matrix bot scaffold")
-    parser.add_argument("--env-file", default=".env", help="Path to env file")
+    parser.add_argument("--config-file", default="config/bot.yaml", help="Path to bot YAML config")
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
-    settings = Settings.from_env(args.env_file)
-    configure_logging(settings.log_level, settings.logging_config_file)
+    settings = Settings.from_yaml(args.config_file)
+    configure_logging(settings.log_level)
     try:
         AdaBot(settings).run()
     except Exception as exc:
