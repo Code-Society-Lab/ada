@@ -17,6 +17,10 @@ implemented with [`Code-Society-Lab/matrixpy`](https://github.com/Code-Society-L
    ```bash
    ada
    ```
+   Optional custom config path:
+   ```bash
+   ada --config-file /path/to/bot.yaml
+   ```
 
 If startup loops warnings like `'next_batch' is a required property`, your token is usually invalid/expired.
 Regenerate `TOKEN` or switch to `PASSWORD` auth in `config/bot.yaml`.
