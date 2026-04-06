@@ -1,60 +1,60 @@
-from __future__ import annotations
-
-import importlib
-import pkgutil
+from collections.abc import Iterator
+from importlib import import_module
+from itertools import chain
+from logging import warning
+from os import walk
+from pathlib import Path, PurePath
+from pkgutil import walk_packages
 from types import ModuleType
-from typing import Any, Iterable, Protocol
+from typing import Set
 
 
-class SetupCallable(Protocol):
-    def __call__(self, bot: Any) -> None: ...
+def import_package_modules(package: ModuleType, shallow: bool = True) -> Iterator[ModuleType]:
+    """Import all modules in the package and yield them in order."""
+    for module in find_all_importable(package, shallow):
+        yield import_module(module)
 
 
-class ExtensionLoadError(RuntimeError):
-    """Raised when an extension cannot be imported or registered."""
-
-
-def _resolve_setup(module: ModuleType, extension: str) -> SetupCallable:
-    setup = getattr(module, "setup", None)
-    if not callable(setup):
-        raise ExtensionLoadError(
-            f"Extension '{extension}' is missing a callable setup(bot) function."
+def find_all_importable(package: ModuleType, shallow: bool = True) -> Set[str]:
+    """Find importable modules in the project and return them in order."""
+    return set(
+        chain.from_iterable(
+            _discover_importable_path(Path(p), package.__name__, shallow) for p in package.__path__
         )
-    return setup
+    )
 
 
-def discover_extensions(package: str) -> list[str]:
-    """Discover importable extension modules under a package path."""
-    package_module = importlib.import_module(package)
-    package_paths = getattr(package_module, "__path__", None)
-    if package_paths is None:
-        raise ExtensionLoadError(f"Package '{package}' is not a package.")
+def _discover_importable_path(pkg_pth: Path, pkg_name: str, shallow: bool) -> Iterator[str]:
+    """Yield all importable packages under a given path and package.
 
-    discovered: list[str] = []
-    for info in pkgutil.walk_packages(package_paths, prefix=f"{package}."):
-        if info.ispkg:
+    This solution is based on a solution by Sviatoslav Sydorenko (webknjaz)
+    * https://github.com/sanitizers/octomachinery/blob/2428877/tests/circular_imports_test.py
+    """
+    for dir_path, _d, file_names in walk(pkg_pth):
+        pkg_dir_path: Path = Path(dir_path)
+
+        if pkg_dir_path.parts[-1] == "__pycache__":
             continue
-        discovered.append(info.name)
-    return discovered
 
+        if all(Path(_).suffix != ".py" for _ in file_names):
+            continue
 
-def load_extension(bot: Any, extension: str) -> None:
-    """Load and register a single extension."""
-    try:
-        module = importlib.import_module(extension)
-    except Exception as exc:
-        raise ExtensionLoadError(f"Failed to import extension '{extension}'.") from exc
+        rel_pt: PurePath = pkg_dir_path.relative_to(pkg_pth)
+        pkg_pref: str = ".".join((pkg_name,) + rel_pt.parts)
 
-    setup = _resolve_setup(module, extension)
-    try:
-        setup(bot)
-    except Exception as exc:
-        raise ExtensionLoadError(f"Extension '{extension}' setup(bot) failed.") from exc
+        if "__init__.py" not in file_names:
+            warning(
+                f"'{pkg_dir_path}' seems to be missing an '__init__.py'. This might cause issues."
+            )
 
+        yield from (
+            pkg_path
+            for _, pkg_path, is_pkg in walk_packages(
+                (str(pkg_dir_path),),
+                prefix=f"{pkg_pref}.",
+            )
+            if not is_pkg
+        )
 
-def load_extensions(bot: Any, extensions: Iterable[str]) -> list[str]:
-    loaded: list[str] = []
-    for extension in extensions:
-        load_extension(bot, extension)
-        loaded.append(extension)
-    return loaded
+        if not shallow:
+            break

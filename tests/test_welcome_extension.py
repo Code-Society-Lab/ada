@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from bot.extensions.core.welcome import _is_new_join, _member_display_name
+from bot.extensions.welcome_extension import _is_new_join, _member_display_name
 
 
 class _RoomWithName:

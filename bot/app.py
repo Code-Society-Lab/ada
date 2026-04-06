@@ -1,29 +1,51 @@
-from __future__ import annotations
-
-import argparse
 import logging
-from collections.abc import Sequence
+from os import getpid
 
-from bot.bot import AdaBot
-from bot.logging_setup import configure_logging
-from bot.settings import Settings
+logging.basicConfig(level=logging.INFO)
+
+logging.getLogger("nio").setLevel(logging.ERROR)
+logging.getLogger("matrix").setLevel(logging.INFO)
+logging.getLogger("apscheduler").setLevel(logging.ERROR)
 
 logger = logging.getLogger(__name__)
 
+import matrix
+from click import group, option
 
-def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Grace-style Matrix bot scaffold")
-    parser.add_argument("--config-file", default="config/bot.yaml", help="Path to bot YAML config")
-    return parser
+from bot import extensions, ada
+from bot.loader import find_all_importable, import_module
+
+APP_INFO = """
+| Matrix.py version: {matrixpy_version}
+| PID: {pid}
+| CONFIG: {config_file}
+""".rstrip()
+
+DEFAULT_CONFIG_FILE = "config/bot.yaml"
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    args = _build_parser().parse_args(argv)
-    settings = Settings.from_yaml(args.config_file)
-    configure_logging(settings.log_level)
-    try:
-        AdaBot(settings).run()
-    except Exception as exc:
-        logger.error("%s", exc)
-        return 1
-    return 0
+@group()
+def cli():
+    pass
+
+
+@cli.command()
+@option(
+    "--config",
+    help=f"Path to the config file.",
+    default=DEFAULT_CONFIG_FILE,
+    show_default=True,
+)
+def start(config: str):
+    for extension in find_all_importable(extensions):
+        module = import_module(extension)
+        ada.bot.load_extension(module.extension)
+
+    _show_application_info(config)
+    ada.bot.start(config=config)
+
+
+def _show_application_info(config_file: str):
+    logger.info(
+        APP_INFO.format(matrixpy_version=matrix.__version__, pid=getpid(), config_file=config_file)
+    )

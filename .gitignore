@@ -10,3 +10,4 @@ build/
 .env
 logs/*.log
 config/bot.yaml
+.idea

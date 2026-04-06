@@ -1,26 +1,27 @@
-from __future__ import annotations
-
-from dataclasses import dataclass
+import logging
+from collections.abc import Iterator
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Self
 
-import yaml
+from matrix import Config
 
-from bot.loader import discover_extensions
+from bot.loader import ModuleType, find_all_importable, import_module
 
-DEFAULT_EXTENSION_PACKAGE = "bot.extensions"
 DEFAULT_LOG_LEVEL = "INFO"
 DEFAULT_CONFIG_FILE = "config/bot.yaml"
 
 
-def _parse_extensions_list(items: object) -> tuple[str, ...]:
-    if not isinstance(items, list):
-        return ()
-    parsed = tuple(str(item).strip() for item in items if str(item).strip())
-    return parsed
+def configure_logging(level: str = "INFO") -> None:
+    logging.basicConfig(
+        level=getattr(logging, level.upper(), logging.INFO),
+        format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    )
 
 
 def _read_yaml_config(path: str | Path) -> dict[str, object]:
     config_path = Path(path)
+
     if not config_path.exists():
         raise FileNotFoundError(f"Config file '{path}' does not exist.")
 
@@ -35,44 +36,32 @@ def _read_yaml_config(path: str | Path) -> dict[str, object]:
     return data
 
 
-def _discover_extensions(package: str) -> tuple[str, ...]:
-    discovered = tuple(sorted(discover_extensions(package)))
-    if discovered:
-        return discovered
-    raise ValueError(f"No extensions discovered in package '{package}'.")
+def _discover_extensions() -> Iterator[ModuleType]:
+    from bot import extensions
 
+    for name in find_all_importable(extensions):
+        imported: ModuleType = import_module(name)
 
-def _validate_matrix_auth(path: str | Path, data: dict[str, object]) -> None:
-    password = str(data.get("PASSWORD", "")).strip()
-    token = str(data.get("TOKEN", "")).strip()
-    has_password = bool(password)
-    has_token = bool(token)
+        if not hasattr(imported, "extension"):
+            raise RuntimeError(f"Module '{name}' does not define an extension.")
 
-    if has_password and has_token:
-        raise ValueError(f"{path} sets both PASSWORD and TOKEN. Set only one auth method.")
-
-    if not has_password and not has_token:
-        raise ValueError(f"{path} must set PASSWORD or TOKEN.")
+        yield imported
 
 
 @dataclass(frozen=True, slots=True)
 class Settings:
-    matrix_config_file: str = DEFAULT_CONFIG_FILE
+    matrix_config: Config
+    config_file_path: str = DEFAULT_CONFIG_FILE
     log_level: str = DEFAULT_LOG_LEVEL
-    extensions: tuple[str, ...] = ()
+    extensions: tuple[ModuleType, ...] = field(default_factory=tuple)
 
     @classmethod
-    def from_yaml(
-        cls,
-        matrix_config_file: str | Path = DEFAULT_CONFIG_FILE,
-    ) -> Settings:
-        config_file = str(matrix_config_file).strip() or DEFAULT_CONFIG_FILE
-        config_data = _read_yaml_config(config_file)
-        _validate_matrix_auth(config_file, config_data)
-
-        extensions = _discover_extensions(DEFAULT_EXTENSION_PACKAGE)
+    def from_yaml(cls, config_path: str | Path) -> Self:
+        config_file_path = str(config_path).strip() or DEFAULT_CONFIG_FILE
+        config = Config(config_file_path)
 
         return cls(
-            matrix_config_file=config_file,
-            extensions=extensions,
+            config_file_path=config_file_path,
+            matrix_config=config,
+            extensions=tuple(_discover_extensions()),
         )
