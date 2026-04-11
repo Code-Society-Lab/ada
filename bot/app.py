@@ -1,11 +1,12 @@
 import logging
-from os import getpid, getenv
+from logging.handlers import RotatingFileHandler
+from os import getpid
 
 import matrix
-from click import group, option
+from coloredlogs import install
 
 from bot import ada
-from bot.config import BotConfig, setup_logging
+from bot.config import BotConfig
 
 logger = logging.getLogger(__name__)
 
@@ -16,40 +17,45 @@ APP_INFO = """
 | extensions: {extension_count}
 """.rstrip()
 
-DEFAULT_ENV = "development"
-CONFIG_DIR = "config"
 
+def start(config_file: str) -> None:
+    config = BotConfig(config_file)
 
-def resolve_config_path(env: str | None) -> str:
-    environment = env or getenv("ADA_ENV", DEFAULT_ENV)
-    return f"{CONFIG_DIR}/{environment}.yaml"
+    _load_logging(config)
+    _load_extensions(config)
+    _show_app_info(config)
 
-
-@group()
-def cli():
-    pass
-
-
-@cli.command()
-@option(
-    "--config",
-    "config_file_path",
-    help=f"Path to the config file.",
-    show_default=True,
-)
-def start(config_file_path: str | None = None):
-    config = BotConfig(resolve_config_path(config_file_path))
-
-    setup_logging(config)
-
-    for extension in config.extensions:
-        ada.bot.load_extension(extension)
-
-    _show_application_info(config)
     ada.bot.start(config=config)
 
 
-def _show_application_info(config: BotConfig) -> None:
+def _load_extensions(config: BotConfig) -> None:
+    for extension in config.extensions:
+        ada.bot.load_extension(extension)
+
+
+def _load_logging(config: BotConfig) -> None:
+    file_handler: RotatingFileHandler = RotatingFileHandler(
+        f"logs/{config.environment}.log", maxBytes=10000, backupCount=5
+    )
+
+    logging.basicConfig(
+        level=config.log_level,
+        format=config.log_format,
+        handlers=[file_handler],
+    )
+
+    # eventually could be more flexible/configurable
+    logging.getLogger("nio").setLevel(logging.WARNING)
+    logging.getLogger("apscheduler").setLevel(logging.WARNING)
+
+    install(
+        config.log_level,
+        fmt=config.log_format,
+        programname=config.environment,
+    )
+
+
+def _show_app_info(config: BotConfig) -> None:
     logger.info(
         APP_INFO.format(
             matrixpy_version=matrix.__version__,

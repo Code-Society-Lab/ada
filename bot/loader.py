@@ -56,5 +56,5 @@ def _discover_importable_path(pkg_pth: Path, pkg_name: str, shallow: bool) -> It
             if not is_pkg
         )
 
-        if not shallow:
+        if shallow:
             break

@@ -1,8 +1,5 @@
-import logging
 from collections.abc import Iterator
-from logging.handlers import RotatingFileHandler
 
-from coloredlogs import install
 from envyaml import EnvYAML
 from matrix import Config, Extension
 
@@ -27,7 +24,11 @@ class BotConfig(Config):
 
         self.config_file: str = config_file or DEFAULT_CONFIG_FILE
         self.environment: str = data.get("ENV", DEFAULT_ENVIRONMENT)
+
         self.log_level: str = data.get("LOG_LEVEL", DEFAULT_LOG_LEVEL)
+        self.log_format: str = (
+            "[%(asctime)s] %(programname)s %(funcName)s %(module)s %(levelname)s %(message)s"
+        )
 
     @property
     def extensions(self) -> Iterator[Extension]:
@@ -40,25 +41,3 @@ class BotConfig(Config):
                 raise RuntimeError(f"Module '{name}' does not define an extension.")
 
             yield imported.extension
-
-
-def setup_logging(config: BotConfig) -> None:
-    file_handler: RotatingFileHandler = RotatingFileHandler(
-        f"logs/{config.environment}.log", maxBytes=10000, backupCount=5
-    )
-
-    logging.basicConfig(
-        level=config.log_level,
-        format="[%(asctime)s] %(funcName)s:%(lineno) %(levelname)s %(message)s",
-        handlers=[file_handler],
-    )
-
-    # eventually could be more flexible/configurable
-    logging.getLogger("nio").setLevel(logging.WARNING)
-    logging.getLogger("apscheduler").setLevel(logging.WARNING)
-
-    install(
-        config.log_level,
-        fmt="[%(asctime)s] %(programname)s %(funcName)s %(module)s %(levelname)s %(message)s",
-        programname=config.environment,
-    )
