@@ -7,35 +7,33 @@ name = "ada"
 version = "0.1.0"
 description = "Ada is a Matrix bot built with matrix.py framework. It provides various functionalities and can be extended with plugins."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
-  "matrix-python>=1.1.0a0",
-  "PyYAML>=6.0.2",
+    "matrix-python==1.4.5a0",
+    "coloredlogs==15.0.1",
+    "envyaml==1.10.211231",
+    "click==8.3.2",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "black",
-  "pytest",
-  "pytest-cov>=5.0.0",
-  "flake8",
-  "mypy",
-  "ruff>=0.6.0",
+    "black==26.3.1",
+    "pytest==9.0.3",
+    "pytest-cov>=5.0.0",
+    "flake8==7.3.0",
+    "mypy==1.20.0",
+    "types-PyYAML==6.0.12.20260408"
 ]
 
 [tool.black]
 line-length = 100
-target-version = ["py311"]
+target-version = ["py312"]
 
 [project.scripts]
-ada = "bot.app:main"
+ada = "bot.cli:cli"
 
 [tool.setuptools.packages.find]
 include = ["bot*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
-[tool.ruff]
-line-length = 100
-target-version = "py311"

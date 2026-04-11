@@ -1,29 +1,68 @@
-from __future__ import annotations
-
-import argparse
 import logging
-from collections.abc import Sequence
+from logging.handlers import RotatingFileHandler
+from os import getpid
 
-from bot.bot import AdaBot
-from bot.logging_setup import configure_logging
-from bot.settings import Settings
+import matrix
+from coloredlogs import install
+
+from bot import ada
+from bot.config import BotConfig
 
 logger = logging.getLogger(__name__)
 
+APP_INFO = """
+| matrix.py: {matrixpy_version}
+| pid: {pid}
+| config: {config_file}
+| environment: {environment}
+| extensions: {extension_count}
+""".rstrip()
 
-def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Grace-style Matrix bot scaffold")
-    parser.add_argument("--config-file", default="config/bot.yaml", help="Path to bot YAML config")
-    return parser
+
+def start(config_file: str) -> None:
+    config = BotConfig(config_file)
+
+    _load_logging(config)
+    _load_extensions(config)
+    _show_app_info(config)
+
+    ada.bot.start(config=config)
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    args = _build_parser().parse_args(argv)
-    settings = Settings.from_yaml(args.config_file)
-    configure_logging(settings.log_level)
-    try:
-        AdaBot(settings).run()
-    except Exception as exc:
-        logger.error("%s", exc)
-        return 1
-    return 0
+def _load_extensions(config: BotConfig) -> None:
+    for extension in config.extensions:
+        ada.bot.load_extension(extension)
+
+
+def _load_logging(config: BotConfig) -> None:
+    file_handler: RotatingFileHandler = RotatingFileHandler(
+        f"logs/{config.environment}.log", maxBytes=10000, backupCount=5
+    )
+
+    logging.basicConfig(
+        level=config.log_level,
+        format=config.log_format,
+        handlers=[file_handler],
+    )
+
+    # eventually could be more flexible/configurable
+    logging.getLogger("nio").setLevel(logging.WARNING)
+    logging.getLogger("apscheduler").setLevel(logging.WARNING)
+
+    install(
+        config.log_level,
+        fmt=config.log_format,
+        programname=config.environment,
+    )
+
+
+def _show_app_info(config: BotConfig) -> None:
+    logger.info(
+        APP_INFO.format(
+            matrixpy_version=matrix.__version__,
+            pid=getpid(),
+            config_file=config.config_file,
+            environment=config.environment,
+            extension_count=len(list(config.extensions)),
+        )
+    )

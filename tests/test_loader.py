@@ -1,26 +1,26 @@
-import pytest
-
-from bot.loader import ExtensionLoadError, discover_extensions, load_extension, load_extensions
-
-
-def test_load_extensions_calls_setup() -> None:
-    state: dict[str, list[str]] = {}
-    loaded = load_extensions(state, ["tests.fake_extension"])
-    assert loaded == ["tests.fake_extension"]
-    assert state["loaded"] == ["tests.fake_extension"]
+from types import ModuleType
+import tests.fake_extensions as fake_extensions
+from bot.loader import find_all_importable, import_package_modules
 
 
-def test_load_extensions_requires_setup() -> None:
-    with pytest.raises(ExtensionLoadError):
-        load_extensions({}, ["tests"])
+def test_find_all_importable_returns_strings() -> None:
+    result = find_all_importable(fake_extensions)
+    assert all(isinstance(name, str) for name in result)
 
 
-def test_load_extension_calls_setup() -> None:
-    state: dict[str, list[str]] = {}
-    load_extension(state, "tests.fake_extension")
-    assert state["loaded"] == ["tests.fake_extension"]
+def test_find_all_importable_finds_all_modules() -> None:
+    result = find_all_importable(fake_extensions)
+    assert "tests.fake_extensions.ping" in result
+    assert "tests.fake_extensions.pong" in result
 
 
-def test_discover_extensions_for_package() -> None:
-    discovered = discover_extensions("tests")
-    assert "tests.fake_extension" in discovered
+def test_import_package_modules_yields_modules() -> None:
+    for module in import_package_modules(fake_extensions):
+        assert isinstance(module, ModuleType)
+
+
+def test_import_package_modules_have_extension_attr() -> None:
+    for module in import_package_modules(fake_extensions):
+        assert hasattr(
+            module, "extension"
+        ), f"{module.__name__} is missing an 'extension' attribute"
