@@ -1,6 +1,6 @@
 import pytest
 
-from bot.settings import Settings
+from bot.config import Settings
 
 
 def test_settings_from_yaml_file_uses_defaults(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
