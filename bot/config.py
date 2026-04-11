@@ -1,10 +1,9 @@
-from logging import basicConfig
-from logging.handlers import RotatingFileHandler
-from coloredlogs import install
-
+import logging
 from collections.abc import Iterator
-from envyaml import EnvYAML
+from logging.handlers import RotatingFileHandler
 
+from coloredlogs import install
+from envyaml import EnvYAML
 from matrix import Config, Extension
 
 from bot.loader import ModuleType, find_all_importable, import_module
@@ -27,8 +26,8 @@ class BotConfig(Config):
         )
 
         self.config_file: str = config_file or DEFAULT_CONFIG_FILE
-        self.environment: str = data.get("ADA_ENV", DEFAULT_ENVIRONMENT)
-        self.log_level: str = data.get("ADA_LOG_LEVEL", DEFAULT_LOG_LEVEL)
+        self.environment: str = data.get("ENV", DEFAULT_ENVIRONMENT)
+        self.log_level: str = data.get("LOG_LEVEL", DEFAULT_LOG_LEVEL)
 
     @property
     def extensions(self) -> Iterator[Extension]:
@@ -48,19 +47,18 @@ def setup_logging(config: BotConfig) -> None:
         f"logs/{config.environment}.log", maxBytes=10000, backupCount=5
     )
 
-    basicConfig(
+    logging.basicConfig(
         level=config.log_level,
-        format="[%(asctime)s] %(funcName)s %(levelname)s %(message)s",
+        format="[%(asctime)s] %(funcName)s:%(lineno) %(levelname)s %(message)s",
         handlers=[file_handler],
     )
 
+    # eventually could be more flexible/configurable
+    logging.getLogger("nio").setLevel(logging.WARNING)
+    logging.getLogger("apscheduler").setLevel(logging.WARNING)
+
     install(
         config.log_level,
-        fmt="".join(
-            [
-                "[%(asctime)s] %(programname)s %(funcName)s ",
-                "%(module)s %(levelname)s %(message)s",
-            ]
-        ),
+        fmt="[%(asctime)s] %(programname)s %(funcName)s %(module)s %(levelname)s %(message)s",
         programname=config.environment,
     )

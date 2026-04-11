@@ -1,19 +1,13 @@
 import logging
 from os import getpid, getenv
 
-logging.basicConfig(level=logging.INFO)
-
-logging.getLogger("nio").setLevel(logging.ERROR)
-logging.getLogger("matrix").setLevel(logging.INFO)
-logging.getLogger("apscheduler").setLevel(logging.ERROR)
-
-logger = logging.getLogger(__name__)
-
 import matrix
 from click import group, option
 
 from bot import ada
 from bot.config import BotConfig, setup_logging
+
+logger = logging.getLogger(__name__)
 
 APP_INFO = """
 | matrix.py: {matrixpy_version}
@@ -22,7 +16,7 @@ APP_INFO = """
 | extensions: {extension_count}
 """.rstrip()
 
-DEFAULT_ENV = "production"
+DEFAULT_ENV = "development"
 CONFIG_DIR = "config"
 
 
@@ -44,7 +38,7 @@ def cli():
     show_default=True,
 )
 def start(config_file_path: str | None = None):
-    config = BotConfig(config_file_path)
+    config = BotConfig(resolve_config_path(config_file_path))
 
     setup_logging(config)
 
