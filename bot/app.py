@@ -14,6 +14,7 @@ APP_INFO = """
 | matrix.py: {matrixpy_version}
 | pid: {pid}
 | config: {config_file}
+| environment: {environment}
 | extensions: {extension_count}
 """.rstrip()
 
@@ -61,6 +62,7 @@ def _show_app_info(config: BotConfig) -> None:
             matrixpy_version=matrix.__version__,
             pid=getpid(),
             config_file=config.config_file,
+            environment=config.environment,
             extension_count=len(list(config.extensions)),
         )
     )
