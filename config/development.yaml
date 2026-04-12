@@ -1,7 +1,7 @@
 USERNAME: "${ADA_USERNAME}"
 PASSWORD: "${ADA_PASSWORD}"
 HOMESERVER: $ADA_HOMESERVER|https://matrix.org
-PREFIX: $ADA_PREFIX|!
+PREFIX: "${ADA_PREFIX|!}"
 
 env: development
 log_level: DEBUG
