@@ -9,4 +9,5 @@ dist/
 build/
 .env
 logs/*.log
+config/*.local.yaml
 .idea
