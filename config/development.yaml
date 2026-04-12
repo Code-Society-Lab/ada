@@ -7,8 +7,8 @@ env: development
 log_level: DEBUG
 
 bot:
-  main_room: "!cHidtNcSgVLvluxHYZ:matrix.org"
+  main_room: "${ADA_MAIN_ROOM|}"
 
 extensions:
   welcome:
-    room: "!cHidtNcSgVLvluxHYZ:matrix.org"
+    room: "${ADA_MAIN_ROOM|}"
