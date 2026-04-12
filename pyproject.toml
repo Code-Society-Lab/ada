@@ -9,9 +9,8 @@ description = "Ada is a Matrix bot built with matrix.py framework. It provides v
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "matrix-python==1.4.5a0",
+    "matrix-python==1.4.6a0",
     "coloredlogs==15.0.1",
-    "envyaml==1.10.211231",
     "click==8.3.2",
 ]
 
@@ -24,10 +23,6 @@ dev = [
     "mypy==1.20.0",
     "types-PyYAML==6.0.12.20260408"
 ]
-
-[tool.black]
-line-length = 100
-target-version = ["py312"]
 
 [project.scripts]
 ada = "bot.cli:cli"

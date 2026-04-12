@@ -1,6 +1,14 @@
-HOMESERVER: $ADA_HOMESERVER|https://matrix.org
 USERNAME: "${ADA_USERNAME}"
 PASSWORD: "${ADA_PASSWORD}"
-PREFIX: $ADA_PASSWORD|!
-ENV: development
-LOG_LEVEL: $ADA_LOG_LEVEL|"debug"
+HOMESERVER: $ADA_HOMESERVER|https://matrix.org
+PREFIX: $ADA_PREFIX|!
+
+env: development
+log_level: DEBUG
+
+bot:
+  main_room: "${ADA_MAIN_ROOM|}"
+
+extensions:
+  welcome:
+    room: "${ADA_MAIN_ROOM|}"
