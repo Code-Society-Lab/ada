@@ -7,8 +7,8 @@ env: development
 log_level: DEBUG
 
 bot:
-  main_channel: "!cHidtNcSgVLvluxHYZ:matrix.org"
+  main_room: "!cHidtNcSgVLvluxHYZ:matrix.org"
 
 extensions:
   welcome:
-    channel: "!cHidtNcSgVLvluxHYZ:matrix.org"
+    room: "!cHidtNcSgVLvluxHYZ:matrix.org"

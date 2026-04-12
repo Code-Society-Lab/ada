@@ -13,7 +13,7 @@ bot = Bot()
 async def on_ready():
     logger.info("Ada is up and running!")
 
-    if main_channel_id := bot.config.get("main_channel", section="bot"):
+    if main_channel_id := bot.config.get("main_room", section="bot"):
         room: Room = bot.get_room(main_channel_id)
         await room.send("Hey, I'm back online!")
 

@@ -7,8 +7,8 @@ env: production
 log_level: INFO
 
 bot:
-  main_channel: "!OaOPoyVKqbmPEcMBbt:matrix.org"
+  main_room: "!OaOPoyVKqbmPEcMBbt:matrix.org"
 
 extensions:
   welcome:
-    channel: "!OaOPoyVKqbmPEcMBbt:matrix.org"
+    room: "!OaOPoyVKqbmPEcMBbt:matrix.org"
