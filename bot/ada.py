@@ -25,12 +25,14 @@ async def on_command_error(ctx: Context, error: CommandError) -> None:
     await ctx.reply(f"{error} Run '!help' for help on commands")
 
 
-@bot.command()
+@bot.command(description="Pong!")
 async def ping(ctx: Context) -> None:
     await ctx.reply(f"Pong! {_get_latency(ctx)}ms")
 
 
-@bot.command()
+@bot.command(
+    description="Display the bot's current status, including uptime, latency, loaded extensions, and connected rooms."
+)
 async def status(ctx: Context) -> None:
     human_readable_uptime = str(timedelta(seconds=int(time.time() - bot.start_at)))
     latency = _get_latency(ctx)
