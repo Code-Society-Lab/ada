@@ -13,8 +13,9 @@ bot = Bot()
 async def on_ready():
     logger.info("Ada is up and running!")
 
-    room: Room = bot.get_room("!cHidtNcSgVLvluxHYZ:matrix.org")
-    await room.send("Hey, I'm back online!")
+    if main_channel_id := bot.config.get("main_channel", section="bot"):
+        room: Room = bot.get_room(main_channel_id)
+        await room.send("Hey, I'm back online!")
 
 
 @bot.command("ping")
