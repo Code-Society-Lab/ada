@@ -28,6 +28,9 @@ class BotConfig(Config):
         for name in find_all_importable(extensions):
             imported: ModuleType = import_module(name)
 
+            if not name.endswith("_extension"):
+                continue
+
             if not hasattr(imported, "extension"):
                 raise RuntimeError(f"Module '{name}' does not define an extension.")
 

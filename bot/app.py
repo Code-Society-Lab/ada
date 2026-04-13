@@ -4,6 +4,7 @@ from os import getpid
 
 import matrix
 from coloredlogs import install
+from sqlmodel import SQLModel
 
 from bot import ada
 from bot.config import BotConfig
@@ -74,6 +75,7 @@ def _load_database(config: BotConfig) -> None:
         logger.critical(f"Unable to load the 'database': {e}")
 
     Model.set_engine(engine)
+    SQLModel.metadata.create_all(engine)
 
 
 def _show_app_info(config: BotConfig) -> None:
