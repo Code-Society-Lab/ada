@@ -4,6 +4,7 @@ from os import getpid
 
 import matrix
 from coloredlogs import install
+from sqlmodel import SQLModel
 
 from bot import ada
 from bot.config import BotConfig
@@ -14,6 +15,7 @@ APP_INFO = """
 | matrix.py: {matrixpy_version}
 | pid: {pid}
 | config: {config_file}
+| database_url={database_url}
 | environment: {environment}
 | extensions: {extension_count}
 """.rstrip()
@@ -24,6 +26,7 @@ def start(config_file: str) -> None:
 
     _load_logging(config)
     _load_extensions(config)
+    _load_database(config)
     _show_app_info(config)
 
     ada.bot.start(config=config)
@@ -56,6 +59,25 @@ def _load_logging(config: BotConfig) -> None:
     )
 
 
+def _load_database(config: BotConfig) -> None:
+    from sqlmodel_toolkit import Model
+    from sqlalchemy.exc import OperationalError
+    from sqlmodel import create_engine
+
+    engine = create_engine(
+        config.database_url,
+        echo=config.get("sqlalchemy_echo", default=False),
+    )
+
+    try:
+        engine.connect()
+    except OperationalError as e:
+        logger.critical(f"Unable to load the 'database': {e}")
+
+    Model.set_engine(engine)
+    SQLModel.metadata.create_all(engine)
+
+
 def _show_app_info(config: BotConfig) -> None:
     logger.info(
         APP_INFO.format(
@@ -63,6 +85,7 @@ def _show_app_info(config: BotConfig) -> None:
             pid=getpid(),
             config_file=config.config_file,
             environment=config.environment,
+            database_url=config.database_url,
             extension_count=len(list(config.extensions)),
         )
     )
