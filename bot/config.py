@@ -13,7 +13,9 @@ class BotConfig(Config):
         super().__init__(config_file)
 
         self.config_file: str = config_file or DEFAULT_CONFIG_FILE
+        self.database_url: str = self["database_url"]
         self.environment: str = self.get("env", default=DEFAULT_ENVIRONMENT)
+
         self.log_level: str = self.get("log_level", default=DEFAULT_LOG_LEVEL)
         self.log_format: str = (
             "[%(asctime)s] %(programname)s %(funcName)s %(module)s %(levelname)s %(message)s"
