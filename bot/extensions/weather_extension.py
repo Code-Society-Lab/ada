@@ -24,17 +24,12 @@ async def weather(ctx: Context, *city_parts: str) -> None:
 
     api_key = _get_api_key(ctx)
     if not api_key:
-        await ctx.reply(
-            "Weather is not configured. Set `extensions.weather.api_key` in config."
-        )
+        await ctx.reply("Weather is not configured.")
         return
 
     result = _fetch_weather(city_name, api_key)
     if result == "not_found":
         await ctx.reply(f"Could not find weather data for {city_name}.")
-        return
-    if result == "unauthorized":
-        await ctx.reply("Weather is misconfigured. Check `extensions.weather.api_key`.")
         return
     if result == "unavailable":
         await ctx.reply("Weather service is temporarily unavailable.")
@@ -68,8 +63,6 @@ def _fetch_weather(city: str, api_key: str) -> dict | str:
     except HTTPError as error:
         if error.code == 404:
             return "not_found"
-        if error.code in (401, 403):
-            return "unauthorized"
         return "unavailable"
     except URLError:
         return "unavailable"
