@@ -23,6 +23,9 @@ built with [`Code-Society-Lab/matrixpy`](https://github.com/Code-Society-Lab/mat
    # Or username + token
    ADA_USERNAME=@yourbot:matrix.org
    ADA_TOKEN=your_token
+
+   # Optional: extension API keys
+   ADA_OPENWEATHER_API_KEY=your_openweather_api_key
 ```
 
 3. Run the bot:
@@ -91,3 +94,8 @@ Drop the file under `bot/extensions/` and it will be auto-discovered and loaded 
 - The file must define an `extension` attribute, or the bot will raise a `RuntimeError` on startup.
 - The extension name passed to `Extension()` should match the module's purpose.
 - Each extension should stay focused on a single feature.
+
+## Weather Extension
+
+The `weather` extension reads its API key from `extensions.weather.api_key`,
+which is already sets in `ADA_OPENWEATHER_API_KEY` in the configs.

@@ -12,3 +12,5 @@ bot:
 extensions:
   welcome:
     room: "${ADA_MAIN_ROOM|}"
+  weather:
+    api_key: "${ADA_OPENWEATHER_API_KEY|}"
