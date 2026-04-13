@@ -9,7 +9,9 @@ from types import ModuleType
 from typing import Set
 
 
-def import_package_modules(package: ModuleType, shallow: bool = True) -> Iterator[ModuleType]:
+def import_package_modules(
+    package: ModuleType, shallow: bool = True
+) -> Iterator[ModuleType]:
     """Import all modules in the package and yield them in order."""
     for module in find_all_importable(package, shallow):
         yield import_module(module)
@@ -19,12 +21,15 @@ def find_all_importable(package: ModuleType, shallow: bool = True) -> Set[str]:
     """Find importable modules in the project and return them in order."""
     return set(
         chain.from_iterable(
-            _discover_importable_path(Path(p), package.__name__, shallow) for p in package.__path__
+            _discover_importable_path(Path(p), package.__name__, shallow)
+            for p in package.__path__
         )
     )
 
 
-def _discover_importable_path(pkg_pth: Path, pkg_name: str, shallow: bool) -> Iterator[str]:
+def _discover_importable_path(
+    pkg_pth: Path, pkg_name: str, shallow: bool
+) -> Iterator[str]:
     """Yield all importable packages under a given path and package.
 
     This solution is based on a solution by Sviatoslav Sydorenko (webknjaz)

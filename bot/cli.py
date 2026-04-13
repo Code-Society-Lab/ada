@@ -18,7 +18,9 @@ def cli():
 
 
 @cli.command("start")
-@option("--env", default=None, help="Environment (development, production, staging, ...)")
+@option(
+    "--env", default=None, help="Environment (development, production, staging, ...)"
+)
 @option("--config", "config_file", default=None, help="Explicit path to a config file")
 def start_command(env: str | None, config_file: str | None):
     if env and config_file:
