@@ -1,7 +1,11 @@
 import pytest
 from types import SimpleNamespace
 
-from bot.extensions.welcome_extension import _is_new_join, _member_display_name, _welcome
+from bot.extensions.welcome_extension import (
+    _is_new_join,
+    _member_display_name,
+    _welcome,
+)
 
 
 class _RoomWithName:
@@ -37,7 +41,9 @@ def test_is_new_join_false_when_already_joined() -> None:
 
 
 def test_member_display_name_uses_room_name() -> None:
-    assert _member_display_name(_RoomWithName(), "@u:example.org") == "user:@u:example.org"
+    assert (
+        _member_display_name(_RoomWithName(), "@u:example.org") == "user:@u:example.org"
+    )
 
 
 def test_member_display_name_falls_back_to_user_id() -> None:

@@ -48,7 +48,9 @@ def test_config_stores_config_file_path(config_file: Path) -> None:
 def test_config_overrides_log_level(tmp_path: Path) -> None:
     config_file = tmp_path / "test.yaml"
     config_file.write_text(
-        "ADA_USERNAME: '@ada:matrix.org'\n" "ADA_PASSWORD: 'secret'\n" "LOG_LEVEL: 'DEBUG'\n"
+        "ADA_USERNAME: '@ada:matrix.org'\n"
+        "ADA_PASSWORD: 'secret'\n"
+        "LOG_LEVEL: 'DEBUG'\n"
     )
     config = BotConfig(str(config_file))
     assert config.log_level == "DEBUG"
@@ -57,7 +59,9 @@ def test_config_overrides_log_level(tmp_path: Path) -> None:
 def test_config_overrides_environment(tmp_path: Path) -> None:
     config_file = tmp_path / "test.yaml"
     config_file.write_text(
-        "ADA_USERNAME: '@ada:matrix.org'\n" "ADA_PASSWORD: 'secret'\n" "ENV: 'production'\n"
+        "ADA_USERNAME: '@ada:matrix.org'\n"
+        "ADA_PASSWORD: 'secret'\n"
+        "ENV: 'production'\n"
     )
     config = BotConfig(str(config_file))
     assert config.environment == "production"
