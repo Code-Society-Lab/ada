@@ -10,7 +10,7 @@
     }
   },
   "deploy": {
-    "aptPackages": ["git", "libpq-dev", "python3-dev", "postgresql"],
+    "aptPackages": ["git", "psycopg2-binary"],
     "startCommand": "python bot --env production start"
   }
 }
