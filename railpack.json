@@ -1,42 +1,13 @@
 {
   "$schema": "https://schema.railpack.com",
-  "provider": "python",
   "buildAptPackages": ["git"],
-  "packages": {
-    "python": "3.12"
-  },
-  "caches": {
-    "pip-cache": {
-      "directory": "/root/.cache/pip",
-      "type": "shared"
-    }
-  },
   "steps": {
     "install": {
-      "inputs": [
-        {
-          "step": "packages:python"
-        },
-        {
-          "local": true,
-          "include": ["."]
-        }
-      ],
-      "caches": ["pip-cache"],
-      "commands": [
-        "pip install --upgrade pip setuptools wheel",
-        "pip install ."
-      ]
+      "commands": ["pip install ."]
     }
   },
   "deploy": {
-    "startCommand": "python bot start --env production",
-    "inputs": [
-      {
-        "step": "install",
-        "include": ["."]
-      }
-    ],
-    "aptPackages": ["git"]
+    "aptPackages": ["git"],
+    "startCommand": "python bot start --env production"
   }
 }
