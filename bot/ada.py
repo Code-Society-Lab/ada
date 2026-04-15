@@ -1,6 +1,7 @@
 import logging
 import time
 from datetime import timedelta
+from textwrap import dedent
 
 from matrix import Bot, Context, Room, __version__ as matrix_version
 from matrix.errors import CommandError
@@ -40,7 +41,7 @@ async def status(ctx: Context) -> None:
     extension_count = len(bot.extensions)
     room_count = len(bot.client.rooms)
 
-    await ctx.reply(f"""
+    await ctx.reply(dedent(f"""
     *“I am in a charming state of confusion.”* - Ada Lovelace
     ──────────────────────
     **Uptime**     {human_readable_uptime}
@@ -49,7 +50,7 @@ async def status(ctx: Context) -> None:
     **Rooms**      {room_count}
     **matrix.py**  {matrix_version}
     ──────────────────────
-    """.strip())
+    """.strip()))
 
 
 def _get_latency(ctx: Context) -> float:

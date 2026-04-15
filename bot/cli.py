@@ -1,7 +1,9 @@
 from os import getenv
-from click import group, option, UsageError
+from click import UsageError, pass_context, group, option, argument
 
 from bot.app import start
+from bot.config import BotConfig
+from bot.migration import up_migration, down_migration
 
 DEFAULT_ENV = "development"
 CONFIG_DIR = "config"
@@ -13,18 +15,38 @@ def resolve_config_path(env: str | None) -> str:
 
 
 @group()
-def cli():
-    pass
-
-
-@cli.command("start")
 @option(
     "--env", default=None, help="Environment (development, production, staging, ...)"
 )
 @option("--config", "config_file", default=None, help="Explicit path to a config file")
-def start_command(env: str | None, config_file: str | None):
+@pass_context
+def cli(ctx, env: str | None, config_file: str | None) -> None:
+    ctx.ensure_object(dict)
+
     if env and config_file:
         raise UsageError("Use either --env or --config, not both.")
 
     path = config_file or resolve_config_path(env)
-    start(path)
+    ctx.obj["config"] = BotConfig(path)
+
+
+@cli.command("start")
+@pass_context
+def start_command(ctx):
+    config = ctx.obj["config"]
+    start(config.config_file)
+
+
+@cli.command()
+@argument("revision", default="head")
+@pass_context
+def up(ctx, revision):
+    config = ctx.obj["config"]
+    up_migration(config, revision)
+
+
+@cli.command()
+@argument("revision", default="head")
+def down(ctx, revision):
+    config = ctx.obj["config"]
+    down_migration(config, revision)
