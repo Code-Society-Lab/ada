@@ -15,6 +15,9 @@
     "install": {
       "inputs": [
         {
+          "step": "packages:python"
+        },
+        {
           "local": true,
           "include": ["."]
         }
