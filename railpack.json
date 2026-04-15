@@ -3,6 +3,7 @@
   "buildAptPackages": ["git"],
   "steps": {
     "install": {
+      "inputs": [{ "local": true, "include": ["."] }],
       "commands": ["pip install ."]
     }
   },
