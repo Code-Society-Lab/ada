@@ -1,42 +1,35 @@
 {
   "$schema": "https://schema.railpack.com",
-  "provider": "python",
-  "buildAptPackages": ["git"],
-  "packages": {
-    "python": "3.12"
-  },
-  "caches": {
-    "pip-cache": {
-      "directory": "/root/.cache/pip",
-      "type": "shared"
-    }
-  },
+
+  "buildAptPackages": [
+    "git",
+    "libpq-dev",
+    "python3-dev",
+    "postgresql"
+  ],
+
   "steps": {
     "install": {
-      "inputs": [
-        {
-          "step": "packages:python"
-        },
-        {
-          "local": true,
-          "include": ["."]
-        }
-      ],
-      "caches": ["pip-cache"],
       "commands": [
-        "pip install --upgrade pip setuptools wheel",
-        "pip install ."
+        { "src": ".", "dest": "." },
+
+        "python3 -m venv .venv",
+        ".venv/bin/pip install --upgrade pip",
+
+        ".venv/bin/pip install psycopg2-binary",
+        ".venv/bin/pip install ."
       ]
     }
   },
+
   "deploy": {
-    "startCommand": "python bot start --env production",
-    "inputs": [
-      {
-        "step": "install",
-        "include": ["."]
-      }
+    "aptPackages": [
+      "git",
+      "libpq-dev",
+      "python3-dev",
+      "postgresql"
     ],
-    "aptPackages": ["git"]
+
+    "startCommand": ".venv/bin/python bot --env production start"
   }
 }
