@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.railpack.com",
-  "buildAptPackages": ["git", "libpq-dev", "python3-dev", "postgresql"],
+  "buildAptPackages": ["git", "libpq-dev", "python3-dev", "postgresql", "psycopg2-binary"],
   "steps": {
     "install": {
       "commands": [
@@ -10,7 +10,7 @@
     }
   },
   "deploy": {
-    "aptPackages": ["git", "psycopg2-binary"],
+    "aptPackages": ["git", "libpq-dev", "python3-dev", "postgresql", "psycopg2-binary"],
     "startCommand": "python bot --env production start"
   }
 }
