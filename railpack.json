@@ -10,7 +10,7 @@
     }
   },
   "deploy": {
-    "aptPackages": ["git"],
-    "startCommand": "python bot start --env production"
+    "aptPackages": ["git", "libpq-dev", "python3-dev", "postgresql"],
+    "startCommand": "python bot --env production start"
   }
 }
