@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.railpack.com",
-  "buildAptPackages": ["git"],
+  "buildAptPackages": ["git", "libpq-dev", "python3-dev", "postgresql"],
   "steps": {
     "install": {
       "commands": [
