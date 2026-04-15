@@ -22,7 +22,7 @@ async def weather(ctx: Context, *city_parts: str) -> None:
         await ctx.reply("Usage: !weather <city>")
         return
 
-    api_key = _get_api_key(ctx)
+    api_key = _get_api_key()
     if not api_key:
         await ctx.reply("Weather is not configured.")
         return
@@ -38,15 +38,11 @@ async def weather(ctx: Context, *city_parts: str) -> None:
     await ctx.reply(_format_weather(city_name, result))
 
 
-def _get_api_key(ctx: Context) -> str | None:
-    for section in ("extensions.weather", "weather", "extensions"):
-        try:
-            value = ctx.bot.config.get("api_key", section=section)
-        except Exception:
-            continue
+def _get_api_key() -> str | None:
+    value = extension.bot.config.get("api_key", section="extensions.weather")
 
-        if value and not _looks_unresolved(value):
-            return value
+    if value and not _looks_unresolved(value):
+        return value
 
     return None
 
