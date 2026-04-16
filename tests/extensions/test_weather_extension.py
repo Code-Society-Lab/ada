@@ -1,13 +1,12 @@
 from datetime import timedelta
 
-from bot.extensions.weather_extension import (
+from bot.extensions.weather.openweather_service import (
     _city_time,
     _format_temperature,
     _format_visibility,
     _format_weather,
     _kelvin_to_celsius,
     _kelvin_to_fahrenheit,
-    _looks_unresolved,
     _normalize_city_name,
 )
 
@@ -26,12 +25,6 @@ def test_format_temperature() -> None:
 
 def test_format_visibility_handles_missing_value() -> None:
     assert _format_visibility(None, "n/a") == "n/a"
-
-
-def test_looks_unresolved_for_placeholder_values() -> None:
-    assert _looks_unresolved("${ADA_OPENWEATHER_API_KEY|}") is True
-    assert _looks_unresolved("$ADA_OPENWEATHER_API_KEY") is True
-    assert _looks_unresolved("real-key") is False
 
 
 def test_normalize_city_name_preserves_multiword_city() -> None:
