@@ -13,7 +13,8 @@ dependencies = [
     "coloredlogs==15.0.1",
     "click==8.3.2",
     "sqlmodel-toolkit @ git+https://github.com/Code-Society-Lab/sqlmodel-toolkit.git",
-    "alembic==1.18.4"
+    "alembic==1.18.4",
+    "requests==2.33.1"
 ]
 
 [project.optional-dependencies]
