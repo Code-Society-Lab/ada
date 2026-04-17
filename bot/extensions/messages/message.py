@@ -1,3 +1,4 @@
+from sqlalchemy import BigInteger
 from sqlmodel import Field
 from sqlmodel_toolkit import Model
 
