@@ -1,3 +1,3 @@
-from cli import cli
+from bot.cli import cli
 
 cli()
