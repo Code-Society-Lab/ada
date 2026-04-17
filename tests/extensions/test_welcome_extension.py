@@ -42,23 +42,23 @@ def test_is_new_join_false_when_already_joined() -> None:
 
 def test_member_display_name_uses_room_name() -> None:
     assert (
-        _member_display_name(_RoomWithName(), "@u:example.org") == "user:@u:example.org"
+        _member_display_name(_RoomWithName(), "@u:example.org") == "user:@u:example.org"  # type: ignore[arg-type]
     )
 
 
 def test_member_display_name_falls_back_to_user_id() -> None:
-    assert _member_display_name(_RoomNoName(), "@u:example.org") == "@u:example.org"
+    assert _member_display_name(_RoomNoName(), "@u:example.org") == "@u:example.org"  # type: ignore[arg-type]
 
 
 @pytest.mark.asyncio
 async def test_welcome_uses_display_name() -> None:
     room = _RoomWithName()
-    await _welcome(room, "@u:example.org")
+    await _welcome(room, "@u:example.org")  # type: ignore[arg-type]
     assert room.sent == ["Welcome user:@u:example.org! Glad to have you here."]
 
 
 @pytest.mark.asyncio
 async def test_welcome_falls_back_to_user_id() -> None:
     room = _RoomNoName()
-    await _welcome(room, "@u:example.org")
+    await _welcome(room, "@u:example.org")  # type: ignore[arg-type]
     assert room.sent == ["Welcome @u:example.org! Glad to have you here."]

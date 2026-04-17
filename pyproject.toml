@@ -38,5 +38,5 @@ testpaths = ["tests"]
 [tool.mypy]
 
 [[tool.mypy.overrides]]
-module = ["nio.*", "matrix.*"]
+module = ["nio.*", "matrix.*", "coloredlogs.*"]
 ignore_missing_imports = true

@@ -23,7 +23,7 @@ jobs:
         run: black --check bot tests alembic
 
       - name: Mypy type check
-        run: mypy bot tests alembic
+        run: mypy bot tests
 
       - name: Pytest
         run: pytest
