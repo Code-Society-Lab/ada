@@ -9,7 +9,7 @@ description = "Ada is a Matrix bot built with matrix.py framework. It provides v
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "matrix-python>=1.4.7a0",
+    "matrix-python>=1.4.9a0",
     "coloredlogs==15.0.1",
     "click==8.3.2",
     "sqlmodel-toolkit @ git+https://github.com/Code-Society-Lab/sqlmodel-toolkit.git",
