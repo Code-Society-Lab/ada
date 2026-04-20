@@ -20,7 +20,7 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Black formatting check
-        run: black --check bot tests alembic
+        run: black --check bot tests db
 
       - name: Mypy type check
         run: mypy bot tests
