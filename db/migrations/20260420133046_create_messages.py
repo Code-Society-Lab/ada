@@ -1,4 +1,5 @@
 """20260420133046 - Create messages"""
+
 from pelican import migration, create_table, drop_table
 
 
