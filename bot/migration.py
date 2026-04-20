@@ -1,33 +1,48 @@
-from logging import fatal, info
-
-from alembic.command import downgrade, revision, upgrade
-from alembic.config import Config
-from alembic.util.exc import CommandError
+from os import environ
+from logging import info, fatal
 
 from .config import BotConfig
 
 
-def _make_alembic_config(config: BotConfig) -> Config:
-    alembic_cfg = Config("alembic.ini")
-    alembic_cfg.set_main_option("sqlalchemy.url", config.database_url)
-    return alembic_cfg
+def _set_database_url(config: BotConfig) -> None:
+    environ["DATABASE_URL"] = config.database_url
 
 
-def generate_migration(config: BotConfig, message: str):
-    try:
-        alembic_cfg = _make_alembic_config(config)
-        revision(alembic_cfg, message=message, autogenerate=True, sql=False)
-    except CommandError as e:
-        fatal(f"Error creating migration: {e}")
+def generate_migration(config: BotConfig, name: str) -> None:
+    _set_database_url(config)
+    from pelican.generator import generate_migration as _generate
+    _generate(name=name)
 
 
-def up_migration(config: BotConfig, revision_: str = "head"):
-    info(f"Upgrading revision {revision_}")
-    alembic_cfg = _make_alembic_config(config)
-    upgrade(alembic_cfg, revision=revision_)
+def up_migration(config: BotConfig, revision: int | None = None) -> None:
+    _set_database_url(config)
+    from pelican import loader, runner, registry
+    loader.load_migrations()
+    if revision is not None:
+        migration = registry.get(revision)
+        if not migration:
+            fatal(f"Migration {revision} not found.")
+            return
+        runner.upgrade(migration)
+    else:
+        applied = list(runner.get_applied_versions())
+        for migration in registry.get_all():
+            if migration.revision not in applied:
+                runner.upgrade(migration)
 
 
-def down_migration(config: BotConfig, revision_: str = "head"):
-    info(f"Downgrading revision {revision_}")
-    alembic_cfg = _make_alembic_config(config)
-    downgrade(alembic_cfg, revision=revision_)
+def down_migration(config: BotConfig, revision: int | None = None) -> None:
+    _set_database_url(config)
+    from pelican import loader, runner, registry
+    loader.load_migrations()
+    if revision is None:
+        applied = list(runner.get_applied_versions())
+        if not applied:
+            info("No migrations have been applied.")
+            return
+        revision = max(applied)
+    migration = registry.get(revision)
+    if not migration:
+        fatal(f"Migration {revision} not found.")
+        return
+    runner.downgrade(migration)

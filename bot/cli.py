@@ -3,7 +3,7 @@ from click import UsageError, pass_context, group, option, argument
 
 from bot.app import start
 from bot.config import BotConfig
-from bot.migration import up_migration, down_migration
+from bot.migration import generate_migration, up_migration, down_migration
 
 DEFAULT_ENV = "development"
 CONFIG_DIR = "config"
@@ -38,15 +38,24 @@ def start_command(ctx):
 
 
 @cli.command()
-@argument("revision", default="head")
+@argument("name")
 @pass_context
-def up(ctx, revision):
+def generate(ctx, name: str):
+    config = ctx.obj["config"]
+    generate_migration(config, name)
+
+
+@cli.command()
+@argument("revision", default=None, required=False, type=int)
+@pass_context
+def up(ctx, revision: int | None):
     config = ctx.obj["config"]
     up_migration(config, revision)
 
 
 @cli.command()
-@argument("revision", default="head")
-def down(ctx, revision):
+@argument("revision", default=None, required=False, type=int)
+@pass_context
+def down(ctx, revision: int | None):
     config = ctx.obj["config"]
     down_migration(config, revision)
