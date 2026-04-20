@@ -42,3 +42,7 @@ asyncio_mode = "auto"
 [[tool.mypy.overrides]]
 module = ["nio.*", "matrix.*", "coloredlogs.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["pelican.*"]
+ignore_missing_imports = true
