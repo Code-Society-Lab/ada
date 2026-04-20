@@ -1,5 +1,4 @@
 from os import environ
-from logging import info, fatal
 
 from .config import BotConfig
 
@@ -9,43 +8,21 @@ def _set_database_url(config: BotConfig) -> None:
 
 
 def generate_migration(config: BotConfig, name: str) -> None:
-    _set_database_url(config)
-    from pelican.generator import generate_migration as _generate
+    from pelican.cli import generate
 
-    _generate(name=name)
+    _set_database_url(config)
+    generate.main([name], standalone_mode=False)
 
 
 def up_migration(config: BotConfig, revision: int | None = None) -> None:
-    _set_database_url(config)
-    from pelican import loader, runner, registry
+    from pelican.cli import up
 
-    loader.load_migrations()
-    if revision is not None:
-        migration = registry.get(revision)
-        if not migration:
-            fatal(f"Migration {revision} not found.")
-            return
-        runner.upgrade(migration)
-    else:
-        applied = list(runner.get_applied_versions())
-        for migration in registry.get_all():
-            if migration.revision not in applied:
-                runner.upgrade(migration)
+    _set_database_url(config)
+    up.main([str(revision)] if revision is not None else [], standalone_mode=False)
 
 
 def down_migration(config: BotConfig, revision: int | None = None) -> None:
-    _set_database_url(config)
-    from pelican import loader, runner, registry
+    from pelican.cli import down
 
-    loader.load_migrations()
-    if revision is None:
-        applied = list(runner.get_applied_versions())
-        if not applied:
-            info("No migrations have been applied.")
-            return
-        revision = max(applied)
-    migration = registry.get(revision)
-    if not migration:
-        fatal(f"Migration {revision} not found.")
-        return
-    runner.downgrade(migration)
+    _set_database_url(config)
+    down.main([str(revision)] if revision is not None else [], standalone_mode=False)
