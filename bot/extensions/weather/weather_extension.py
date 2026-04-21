@@ -1,12 +1,15 @@
 from matrix import Context, Extension
-from .openweather_service import (
+from .openweather_service import fetch_weather
+from .weather_helper import (
     WeatherError,
-    _normalize_city_name,
-    _fetch_weather,
-    _format_weather,
+    format_weather,
 )
 
 extension = Extension("weather")
+
+
+def _normalize_city_name(city_parts: tuple[str, ...]) -> str:
+    return " ".join(city_parts).title().strip()
 
 
 def _get_api_key() -> str | None:
@@ -29,11 +32,11 @@ async def weather(ctx: Context, *city: str) -> None:
         await ctx.reply("Weather is not configured.")
         return
 
-    result = _fetch_weather(city_name, api_key)
+    result = fetch_weather(api_key, city_name)
     match result:
         case WeatherError.NOT_FOUND:
             await ctx.reply(f"Could not find weather data for {city_name}.")
         case WeatherError.UNAVAILABLE:
             await ctx.reply("Weather service is temporarily unavailable.")
         case _:
-            await ctx.reply(_format_weather(city_name, result))
+            await ctx.reply(format_weather(city_name, result))

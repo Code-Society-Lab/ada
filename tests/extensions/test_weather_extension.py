@@ -1,14 +1,15 @@
 from datetime import timedelta
 
-from bot.extensions.weather.openweather_service import (
+from bot.extensions.weather.weather_helper import (
     _city_time,
     _format_temperature,
     _format_visibility,
-    _format_weather,
+    format_weather,
     _kelvin_to_celsius,
     _kelvin_to_fahrenheit,
-    _normalize_city_name,
 )
+
+from bot.extensions.weather.weather_extension import _normalize_city_name
 
 
 def test_kelvin_to_celsius() -> None:
@@ -39,7 +40,7 @@ def test_city_time_uses_timezone_offset() -> None:
 
 
 def test_format_weather() -> None:
-    message = _format_weather(
+    message = format_weather(
         "Paris",
         {
             "timezone": 7200,
@@ -54,8 +55,15 @@ def test_format_weather() -> None:
         },
     )
 
-    assert "### Weather for Paris" in message
-    assert "**Description**: Clear Sky" in message
-    assert "**Humidity**: 52%" in message
-    assert "**Pressure**: 1014 hPa" in message
-    assert "**Visibility**: 10,000m | 32,808ft" in message
+    lines = message.splitlines()
+
+    assert lines[0] == "### Weather for Paris"
+    assert lines[1] == "```"
+    assert lines[2].startswith("Local time:")
+    assert lines[3] == "Description:   Clear Sky"
+    assert lines[4] == "Temperature:   68.00°F | 20.00°C"
+    assert lines[5] == "Feels like:    69.80°F | 21.00°C"
+    assert lines[6] == "Humidity:      52%"
+    assert lines[7] == "Pressure:      1,014 hPa"
+    assert lines[8] == "Visibility:    10,000m | 32,808ft"
+    assert lines[9] == "```"
