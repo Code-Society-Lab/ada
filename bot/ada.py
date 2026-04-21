@@ -35,7 +35,9 @@ async def ping(ctx: Context) -> None:
     description="Display the bot's current status, including uptime, latency, loaded extensions, and connected rooms."
 )
 async def status(ctx: Context) -> None:
-    human_readable_uptime = str(timedelta(seconds=int(time.time() - bot.start_at)))
+    human_readable_uptime = str(
+        timedelta(seconds=int(time.time() - (bot.start_at or time.time())))
+    )
     latency = _get_latency(ctx)
     extensions = ", ".join(bot.extensions.keys())
     extension_count = len(bot.extensions)
