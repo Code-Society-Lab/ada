@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from enum import Enum
-from typing import Any, TypedDict
+from typing import Any, NotRequired, TypedDict
 
 
 class WeatherError(Enum):
@@ -10,13 +10,18 @@ class WeatherError(Enum):
     UNAVAILABLE = "unavailable"
 
 
-class WeatherPayload(TypedDict):
-    """TypedDict for the expected structure of the weather API response."""
+class TimezonePayload(TypedDict):
+    """TypedDict for payloads that include a timezone offset."""
+
+    timezone: int
+
+
+class WeatherPayload(TimezonePayload):
+    """TypedDict for the weather fields used when formatting a forecast."""
 
     weather: list[dict[str, Any]]
     main: dict[str, Any]
-    timezone: int
-    visibility: int
+    visibility: NotRequired[int]
 
 
 def format_weather(city: str, data: WeatherPayload) -> str:
@@ -51,7 +56,7 @@ def format_weather(city: str, data: WeatherPayload) -> str:
     )
 
 
-def _city_time(data: WeatherPayload) -> datetime:
+def _city_time(data: TimezonePayload) -> datetime:
     """Get the local time for the given city using the API timezone offset."""
 
     offset_seconds = int(data.get("timezone", 0))
