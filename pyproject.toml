@@ -13,7 +13,8 @@ dependencies = [
     "coloredlogs==15.0.1",
     "click==8.3.2",
     "sqlmodel-toolkit @ git+https://github.com/Code-Society-Lab/sqlmodel-toolkit.git",
-    "alembic==1.18.4"
+    "alembic==1.18.4",
+    "requests==2.33.1"
 ]
 
 [project.optional-dependencies]
@@ -24,6 +25,7 @@ dev = [
     "pytest-asyncio>=0.24",
     "flake8==7.3.0",
     "mypy==1.20.1",
+    "types-requests==2.32.4.20250913",
     "types-PyYAML==6.0.12.20260408"
 ]
 
