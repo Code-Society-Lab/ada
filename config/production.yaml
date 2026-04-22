@@ -5,7 +5,7 @@ PREFIX: "${ADA_PREFIX|!}"
 
 env: production
 log_level: INFO
-database_url: "${ADA_DATABASE_URL}"
+database_url: DATABASE_URL
 
 bot:
   main_room: "!OaOPoyVKqbmPEcMBbt:matrix.org"
