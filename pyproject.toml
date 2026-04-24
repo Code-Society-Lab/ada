@@ -13,7 +13,7 @@ dependencies = [
     "coloredlogs==15.0.1",
     "click==8.3.2",
     "sqlmodel-toolkit @ git+https://github.com/Code-Society-Lab/sqlmodel-toolkit.git",
-    "pelican-migration"
+    "pelican-migration>=0.1.2a0"
 ]
 
 [project.optional-dependencies]

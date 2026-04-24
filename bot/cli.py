@@ -1,7 +1,8 @@
-from os import getenv, environ
-from click import UsageError, pass_context, group, option, argument
+from os import getenv
+from click import UsageError, pass_context, group, option
+
+from pelican import use_context
 from pelican.cli import cli as pelican_cli
-from pelican import runner
 
 from bot.app import start
 from bot.config import BotConfig
@@ -31,7 +32,7 @@ def cli(ctx, env: str | None, config_file: str | None) -> None:
     config = BotConfig(path)
 
     ctx.obj["config"] = config
-    runner.database_url = config.database_url
+    ctx.with_resource(use_context(database_url=config.database_url))
 
 
 @cli.command("start", help="Start the bot")
