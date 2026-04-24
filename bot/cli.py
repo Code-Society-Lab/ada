@@ -1,9 +1,11 @@
 from os import getenv
-from click import UsageError, pass_context, group, option, argument
+from click import UsageError, pass_context, group, option
+
+from pelican import use_context
+from pelican.cli import cli as pelican_cli
 
 from bot.app import start
 from bot.config import BotConfig
-from bot.migration import up_migration, down_migration
 
 DEFAULT_ENV = "development"
 CONFIG_DIR = "config"
@@ -27,26 +29,24 @@ def cli(ctx, env: str | None, config_file: str | None) -> None:
         raise UsageError("Use either --env or --config, not both.")
 
     path = config_file or resolve_config_path(env)
-    ctx.obj["config"] = BotConfig(path)
+    config = BotConfig(path)
+
+    ctx.obj["config"] = config
+    ctx.with_resource(use_context(database_url=config.database_url))
 
 
-@cli.command("start")
+@cli.command("start", help="Start the bot")
 @pass_context
 def start_command(ctx):
     config = ctx.obj["config"]
     start(config.config_file)
 
 
-@cli.command()
-@argument("revision", default="head")
-@pass_context
-def up(ctx, revision):
-    config = ctx.obj["config"]
-    up_migration(config, revision)
+@cli.group(help="Database utilities commands")
+def db():
+    pass
 
 
-@cli.command()
-@argument("revision", default="head")
-def down(ctx, revision):
-    config = ctx.obj["config"]
-    down_migration(config, revision)
+# we add each pelican command to the db group
+for cmd in pelican_cli.commands.values():
+    db.add_command(cmd)

@@ -22,6 +22,10 @@ class BotConfig(Config):
         )
 
     @property
+    def is_production(self) -> bool:
+        return self.environment in ["production"]
+
+    @property
     def extensions(self) -> Iterator[Extension]:
         from bot import extensions
 

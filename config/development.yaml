@@ -5,7 +5,7 @@ PREFIX: "${ADA_PREFIX|!}"
 
 env: development
 log_level: DEBUG
-database_url: sqlite:///development.db
+database_url: $DATABASE_URL|sqlite:///development.db
 sqlalchemy_echo: True
 
 bot:
