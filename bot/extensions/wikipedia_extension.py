@@ -26,11 +26,16 @@ extension = Extension("wikipedia")
 )
 async def wiki(ctx: Context, *args: str) -> None:
     if not args:
-        raise ValueError("Please provide a search query. Usage: !wiki <search query>")
+        raise ValueError(
+            "Please provide a search query. Usage: !wiki <search query>"
+        )
 
     query = " ".join(args).strip()
     if len(query) > 300:
-        raise ValueError("Search query is too long. Please limit it to 300 characters or less.")
+        raise ValueError(
+            "Search query is too long."
+            "Please limit it to 300 characters or less."
+        )
     payload = await asyncio.to_thread(_search_wikipedia, query)
     result_message = _format_results(query, payload)
     await ctx.reply(result_message)
