@@ -54,6 +54,14 @@ def _search_wikipedia(query: str) -> list:
 
 
 def _format_results(query: str, payload: list) -> str:
+    if (
+        not isinstance(payload, list)
+        or len(payload) < 4
+        or not isinstance(payload[1], list)
+        or not isinstance(payload[3], list)
+    ):
+        raise ValueError("Unexpected response format from Wikipedia API.")
+
     titles, urls = payload[1], payload[3]
     if not titles:
         raise ValueError(f"No results found for '{query}'.")
