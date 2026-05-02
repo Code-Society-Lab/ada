@@ -13,7 +13,8 @@ dependencies = [
     "coloredlogs==15.0.1",
     "click==8.3.2",
     "sqlmodel-toolkit @ git+https://github.com/Code-Society-Lab/sqlmodel-toolkit.git",
-    "pelican-migration>=0.1.2a0"
+    "pelican-migration>=0.1.2a0",
+    "requests==2.33.1"
 ]
 
 [project.optional-dependencies]
@@ -24,7 +25,8 @@ dev = [
     "pytest-asyncio>=0.24",
     "flake8==7.3.0",
     "mypy==1.20.1",
-    "types-PyYAML==6.0.12.20260408"
+    "types-PyYAML==6.0.12.20260408",
+    "types-requests"
 ]
 
 [project.scripts]
