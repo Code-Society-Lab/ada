@@ -33,7 +33,7 @@ async def wiki(ctx: Context, *args: str) -> None:
 
 @wiki.error(exception=requests.RequestException)
 async def wiki_unreachable(ctx: Context, error: requests.RequestException) -> None:
-    await ctx.reply("Sorry, I couldn't reach Wikipedia.")
+    await ctx.reply("Sorry, something went wrong while contacting Wikipedia")
 
 
 @wiki.error(exception=ValueError)

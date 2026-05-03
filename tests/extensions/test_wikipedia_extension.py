@@ -45,7 +45,6 @@ def test_search_wikipedia_calls_api_with_correct_params() -> None:
     with patch(
         "bot.extensions.wikipedia_extension.requests.get", return_value=fake_response
     ) as mock_get:
-        mock_get.return_value = fake_response
 
         result = _search_wikipedia("test query")
 
@@ -74,4 +73,19 @@ def test_search_wikipedia_raises_on_http_error() -> None:
         "bot.extensions.wikipedia_extension.requests.get", return_value=fake_response
     ):
         with pytest.raises(requests.HTTPError, match="error"):
+            _search_wikipedia("python")
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        requests.ConnectionError("connection failed"),
+        requests.Timeout("request timed out"),
+    ],
+)
+def test_search_wikipedia_raises_on_network_error(exception) -> None:
+    with patch(
+        "bot.extensions.wikipedia_extension.requests.get", side_effect=exception
+    ):
+        with pytest.raises(type(exception), match=str(exception)):
             _search_wikipedia("python")
