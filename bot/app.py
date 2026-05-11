@@ -5,6 +5,7 @@ from os import getpid
 import matrix
 from coloredlogs import install
 from sqlmodel import SQLModel
+from pelican import get_runner, get_registry
 
 from bot import ada
 from bot.config import BotConfig
@@ -76,6 +77,20 @@ def _load_database(config: BotConfig) -> None:
 
     Model.set_engine(engine)
     SQLModel.metadata.create_all(engine)
+
+    if config.is_production:
+        _run_migrations()
+
+
+def _run_migrations() -> None:
+    runner = get_runner()
+    registry = get_registry()
+
+    applied = list(runner.get_applied_versions())
+    migrations = [m for m in registry.get_all() if m.revision not in applied]
+
+    for migration in migrations:
+        runner.upgrade(migration)
 
 
 def _show_app_info(config: BotConfig) -> None:
