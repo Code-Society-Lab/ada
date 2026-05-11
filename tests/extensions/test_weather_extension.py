@@ -1,5 +1,7 @@
-from datetime import timedelta
+from datetime import UTC, datetime
+from unittest.mock import MagicMock, patch
 
+from bot.extensions.weather.openweather_service import WeatherError, fetch_weather
 from bot.extensions.weather.weather_helper import (
     _city_time,
     _format_temperature,
@@ -32,23 +34,51 @@ def test_normalize_city_name_preserves_multiword_city() -> None:
     assert _normalize_city_name(("los", "angeles")) == "Los Angeles"
 
 
-def test_city_time_uses_timezone_offset() -> None:
-    utc_time = _city_time({"timezone": 0})
-    offset_time = _city_time({"timezone": 3600})
-    delta = offset_time - utc_time
-    assert timedelta(minutes=59) < delta < timedelta(minutes=61)
+def test_city_time_uses_timestamp() -> None:
+    assert _city_time(0) == datetime.fromtimestamp(0, UTC)
+
+
+def test_fetch_weather_normalizes_openweather_payload() -> None:
+    fake_response = MagicMock()
+    fake_response.status_code = 200
+    fake_response.json.return_value = {
+        "dt": 1000,
+        "timezone": 3600,
+        "visibility": 10000,
+        "weather": [{"description": "clear sky", "icon": "01d"}],
+        "main": {
+            "temp": 293.15,
+            "feels_like": 294.15,
+            "temp_min": 292.15,
+            "temp_max": 295.15,
+            "humidity": 52,
+            "pressure": 1014,
+        },
+    }
+
+    with patch(
+        "bot.extensions.weather.openweather_service.requests.get",
+        return_value=fake_response,
+    ):
+        result = fetch_weather("api-key", "Paris")
+
+    assert not isinstance(result, WeatherError)
+    assert result["timestamp"] == 4600
+    assert result["visibility"] == 10000
 
 
 def test_format_weather() -> None:
     message = format_weather(
         "Paris",
         {
-            "timezone": 7200,
+            "timestamp": 0,
             "visibility": 10000,
             "weather": [{"description": "clear sky", "icon": "01d"}],
             "main": {
                 "temp": 293.15,
                 "feels_like": 294.15,
+                "temp_min": 292.15,
+                "temp_max": 295.15,
                 "humidity": 52,
                 "pressure": 1014,
             },
@@ -58,12 +88,13 @@ def test_format_weather() -> None:
     lines = message.splitlines()
 
     assert lines[0] == "### Weather for Paris"
-    assert lines[1] == "```"
-    assert lines[2].startswith("Local time:")
-    assert lines[3] == "Description:   Clear Sky"
-    assert lines[4] == "Temperature:   68.00°F | 20.00°C"
-    assert lines[5] == "Feels like:    69.80°F | 21.00°C"
-    assert lines[6] == "Humidity:      52%"
-    assert lines[7] == "Pressure:      1,014 hPa"
-    assert lines[8] == "Visibility:    10,000m | 32,808ft"
-    assert lines[9] == "```"
+    assert lines[1] == "<pre>Local time:    1970-01-01 00:00"
+    assert lines[2] == "Description:   Clear Sky"
+    assert lines[3] == "Temperature:   68.00°F | 20.00°C"
+    assert lines[4] == "- Min:         66.20°F | 19.00°C"
+    assert lines[5] == "- Max:         71.60°F | 22.00°C"
+    assert lines[6] == "Feels like:    69.80°F | 21.00°C"
+    assert lines[7] == "Humidity:      52%"
+    assert lines[8] == "Pressure:      1,014 hPa"
+    assert lines[9] == "Visibility:    10,000m | 32,808ft"
+    assert lines[10] == "</pre>"

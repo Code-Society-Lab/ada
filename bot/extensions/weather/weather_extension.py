@@ -1,9 +1,6 @@
 from matrix import Context, Extension
-from .openweather_service import fetch_weather
-from .weather_helper import (
-    WeatherError,
-    format_weather,
-)
+from .openweather_service import WeatherError, fetch_weather
+from .weather_helper import format_weather
 
 extension = Extension("weather")
 
