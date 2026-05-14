@@ -13,3 +13,5 @@ bot:
 extensions:
   welcome:
     room: "!OaOPoyVKqbmPEcMBbt:matrix.org"
+  weather:
+    api_key: "${ADA_OPENWEATHER_API_KEY|}"
