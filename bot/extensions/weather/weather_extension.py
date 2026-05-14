@@ -34,7 +34,10 @@ async def missing_api_key(ctx: Context, error: CheckError) -> None:
 async def weather(ctx: Context, *city: str) -> None:
     city_name = _normalize_city_name(city)
 
-    api_key = _get_api_key()
+    api_key: str | None = _get_api_key()
+    if not api_key:
+        await ctx.reply("Weather is not configured.")
+        return
 
     result = fetch_weather(api_key, city_name)
     match result:
