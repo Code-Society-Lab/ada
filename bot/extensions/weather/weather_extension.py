@@ -1,4 +1,5 @@
 from matrix import Context, Extension
+from matrix.errors import CheckError
 from .openweather_service import WeatherError, fetch_weather
 from .weather_helper import format_weather
 
@@ -18,6 +19,15 @@ async def has_api_key(_ctx: Context) -> bool:
     return _get_api_key() is not None
 
 
+@extension.error(CheckError)
+async def missing_api_key(ctx: Context, error: CheckError) -> None:
+    if isinstance(error, CheckError):
+        await ctx.reply(
+            "Weather extension is not configured with an API key. "
+            "Please set the api_key in the configuration to use this command."
+        )
+
+
 @extension.command(
     "weather", description="Show current weather information for a city."
 )
@@ -25,9 +35,6 @@ async def weather(ctx: Context, *city: str) -> None:
     city_name = _normalize_city_name(city)
 
     api_key = _get_api_key()
-    if not api_key:
-        await ctx.reply("Weather is not configured.")
-        return
 
     result = fetch_weather(api_key, city_name)
     match result:
