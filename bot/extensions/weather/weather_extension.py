@@ -19,15 +19,6 @@ async def has_api_key(_ctx: Context) -> bool:
     return _get_api_key() is not None
 
 
-@extension.error(CheckError)
-async def missing_api_key(ctx: Context, error: CheckError) -> None:
-    if isinstance(error, CheckError):
-        await ctx.reply(
-            "Weather extension is not configured with an API key. "
-            "Please set the api_key in the configuration to use this command."
-        )
-
-
 @extension.command(
     "weather", description="Show current weather information for a city."
 )
@@ -47,3 +38,12 @@ async def weather(ctx: Context, *city: str) -> None:
             await ctx.reply("Weather service is temporarily unavailable.")
         case _:
             await ctx.reply(format_weather(city_name, result))
+
+
+@weather.error(CheckError)
+async def missing_api_key(ctx: Context, error: CheckError) -> None:
+    if isinstance(error, CheckError):
+        await ctx.reply(
+            "Weather extension is not configured with an API key. "
+            "Please set the api_key in the configuration to use this command."
+        )
