@@ -8,7 +8,7 @@ extension = Extension("kick")
 
 
 def format_kick_result(result: KickResult) -> str:
-    if result.scope == "room":
+    if result.space_id is None:
         return "\n".join(
             [
                 f"Target: `{result.target_user_id}`",

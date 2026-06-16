@@ -19,7 +19,6 @@ async def kick_from_context(
         return KickResult(
             target_user_id=user_id,
             reason=reason,
-            scope="room",
             space_id=None,
             kicked_room_ids=[room_id] if room_id else [],
         )
@@ -41,7 +40,6 @@ async def kick_from_context(
     return KickResult(
         target_user_id=user_id,
         reason=reason,
-        scope="space",
         space_id=space_id,
         kicked_room_ids=kicked,
     )
