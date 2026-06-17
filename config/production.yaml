@@ -9,6 +9,7 @@ database_url: $DATABASE_URL
 
 bot:
   main_room: "!OaOPoyVKqbmPEcMBbt:matrix.org"
+  moderators: "${ADA_MODERATORS|}"
 
 extensions:
   welcome:
