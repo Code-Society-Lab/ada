@@ -7,3 +7,4 @@ class KickResult:
     reason: str
     space_id: str | None
     kicked_room_ids: list[str]
+    failed_room_ids: list[str]
