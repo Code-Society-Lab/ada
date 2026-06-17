@@ -1,0 +1,2 @@
+class SpaceNotFoundError(Exception):
+    pass
