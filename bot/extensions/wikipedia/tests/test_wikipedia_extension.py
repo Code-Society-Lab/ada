@@ -2,7 +2,7 @@ import pytest
 import requests
 from unittest.mock import patch, MagicMock
 
-from bot.extensions.wikipedia_extension import (
+from bot.extensions.wikipedia.wikipedia_extension import (
     _format_results,
     _search_wikipedia,
 )
@@ -43,7 +43,8 @@ def test_search_wikipedia_calls_api_with_correct_params() -> None:
     fake_response.json.return_value = fake_payload
 
     with patch(
-        "bot.extensions.wikipedia_extension.requests.get", return_value=fake_response
+        "bot.extensions.wikipedia.wikipedia_extension.requests.get",
+        return_value=fake_response,
     ) as mock_get:
 
         result = _search_wikipedia("test query")
@@ -70,7 +71,8 @@ def test_search_wikipedia_raises_on_http_error() -> None:
     fake_response.raise_for_status.side_effect = requests.HTTPError("error")
 
     with patch(
-        "bot.extensions.wikipedia_extension.requests.get", return_value=fake_response
+        "bot.extensions.wikipedia.wikipedia_extension.requests.get",
+        return_value=fake_response,
     ):
         with pytest.raises(requests.HTTPError, match="error"):
             _search_wikipedia("python")
@@ -85,7 +87,8 @@ def test_search_wikipedia_raises_on_http_error() -> None:
 )
 def test_search_wikipedia_raises_on_network_error(exception) -> None:
     with patch(
-        "bot.extensions.wikipedia_extension.requests.get", side_effect=exception
+        "bot.extensions.wikipedia.wikipedia_extension.requests.get",
+        side_effect=exception,
     ):
         with pytest.raises(type(exception), match=str(exception)):
             _search_wikipedia("python")

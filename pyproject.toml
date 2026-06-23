@@ -36,7 +36,7 @@ ada = "bot.cli:cli"
 include = ["bot*"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "bot"]
 asyncio_mode = "auto"
 
 [tool.mypy]
