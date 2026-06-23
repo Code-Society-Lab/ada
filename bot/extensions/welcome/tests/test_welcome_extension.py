@@ -1,7 +1,7 @@
 import pytest
 from types import SimpleNamespace
 
-from bot.extensions.welcome_extension import (
+from bot.extensions.welcome.welcome_extension import (
     _is_new_join,
     _member_display_name,
     _welcome,

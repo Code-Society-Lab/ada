@@ -1,5 +1,7 @@
+import sys
 import pytest
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 from bot.config import BotConfig, DEFAULT_LOG_LEVEL, DEFAULT_ENVIRONMENT
 
 
@@ -19,6 +21,13 @@ def config_file(tmp_path: Path) -> Path:
 @pytest.fixture
 def bot_config(config_file: Path) -> BotConfig:
     return BotConfig(str(config_file))
+
+
+@pytest.fixture
+def extension_module() -> MagicMock:
+    module = MagicMock()
+    module.extension = MagicMock()
+    return module
 
 
 def test_config_loads_username(bot_config: BotConfig) -> None:
@@ -68,3 +77,86 @@ def test_config_overrides_environment(tmp_path: Path) -> None:
     )
     config = BotConfig(str(config_file))
     assert config.environment == "production"
+
+
+def test_extensions_yields_valid_extension(
+    bot_config: BotConfig, extension_module: MagicMock
+) -> None:
+    with (
+        patch.dict(sys.modules, {"bot.extensions": MagicMock()}),
+        patch(
+            "bot.config.find_all_importable",
+            return_value={"bot.extensions.foo_extension"},
+        ),
+        patch("bot.config.import_module", return_value=extension_module),
+    ):
+        result = list(bot_config.extensions)
+
+    assert result == [extension_module.extension]
+
+
+def test_extensions_skips_tests_folder(
+    bot_config: BotConfig, extension_module: MagicMock
+) -> None:
+    with (
+        patch.dict(sys.modules, {"bot.extensions": MagicMock()}),
+        patch(
+            "bot.config.find_all_importable",
+            return_value={"bot.extensions.tests.foo_extension"},
+        ),
+        patch("bot.config.import_module") as mock_import,
+    ):
+        result = list(bot_config.extensions)
+
+    assert result == []
+    mock_import.assert_not_called()
+
+
+def test_extensions_skips_test_modules(
+    bot_config: BotConfig, extension_module: MagicMock
+) -> None:
+    with (
+        patch.dict(sys.modules, {"bot.extensions": MagicMock()}),
+        patch(
+            "bot.config.find_all_importable",
+            return_value={"bot.extensions.test_foo_extension"},
+        ),
+        patch("bot.config.import_module") as mock_import,
+    ):
+        result = list(bot_config.extensions)
+
+    assert result == []
+    mock_import.assert_not_called()
+
+
+def test_extensions_skips_non_extension_modules(
+    bot_config: BotConfig, extension_module: MagicMock
+) -> None:
+    with (
+        patch.dict(sys.modules, {"bot.extensions": MagicMock()}),
+        patch(
+            "bot.config.find_all_importable", return_value={"bot.extensions.helpers"}
+        ),
+        patch("bot.config.import_module") as mock_import,
+    ):
+        result = list(bot_config.extensions)
+
+    assert result == []
+    mock_import.assert_not_called()
+
+
+def test_extensions_raises_if_missing_extension_attribute(
+    bot_config: BotConfig,
+) -> None:
+    module = MagicMock(spec=[])
+
+    with (
+        patch.dict(sys.modules, {"bot.extensions": MagicMock()}),
+        patch(
+            "bot.config.find_all_importable",
+            return_value={"bot.extensions.foo_extension"},
+        ),
+        patch("bot.config.import_module", return_value=module),
+    ):
+        with pytest.raises(RuntimeError, match="does not define an extension"):
+            list(bot_config.extensions)
