@@ -32,7 +32,7 @@ class BotConfig(Config):
         for name in find_all_importable(extensions):
             if any(part.startswith("test") for part in name.split(".")):
                 continue
-            
+
             if not name.endswith("_extension"):
                 continue
 
