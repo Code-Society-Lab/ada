@@ -10,9 +10,6 @@ sqlalchemy_echo: True
 
 bot:
   main_room: "${ADA_MAIN_ROOM|}"
-  moderators:
-    - "@astranebula:matrix.org"
-    - "@penguinboi:matrix.org"
 
 extensions:
   welcome:

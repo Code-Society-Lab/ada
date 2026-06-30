@@ -1,22 +1,8 @@
 from matrix import Context
 
 
-def _configured_moderators(ctx: Context) -> list[str]:
-    moderators = ctx.bot.config.get(
-        "moderators",
-        section="bot",
-        default=[],
-    )
-
-    if isinstance(moderators, str):
-        return [
-            moderator.strip()
-            for moderator in moderators.split(",")
-            if moderator.strip()
-        ]
-
-    return moderators
-
-
 async def is_moderator(ctx: Context) -> bool:
-    return ctx.sender in _configured_moderators(ctx)
+    power_levels = ctx.room.matrix_room.power_levels
+    sender_level = power_levels.get_user_level(ctx.sender)
+
+    return sender_level >= power_levels.defaults.kick
