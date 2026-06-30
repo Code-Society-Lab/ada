@@ -38,7 +38,6 @@ async def collect_space_child_room_ids(
             continue
 
         if child_room.room_type == "m.space":
-            room_ids.append(child_room_id)
             space_children = await collect_space_child_room_ids(
                 ctx,
                 child_room,
@@ -46,7 +45,7 @@ async def collect_space_child_room_ids(
                 depth + 1,
             )
             room_ids.extend(space_children)
-        else:
-            room_ids.append(child_room_id)
+
+        room_ids.append(child_room_id)
 
     return room_ids
