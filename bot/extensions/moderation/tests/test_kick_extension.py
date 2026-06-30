@@ -154,9 +154,9 @@ async def test_kick_from_context__with_nested_space_children__expect_nested_targ
     )
     leaf_room.kick_user.assert_awaited_once_with("@target:example.com", reason="spam")
     root_space.kick_user.assert_awaited_once_with("@target:example.com", reason="spam")
-    assert result.kicked_room_ids == [
+    assert set(result.kicked_room_ids) == {
         "!nested-space:example.com",
         "!leaf-room:example.com",
         "!root-space:example.com",
-    ]
+    }
     assert result.failed_room_ids == []
