@@ -4,7 +4,6 @@ from matrix.errors import CheckError
 from bot.permissions import is_moderator
 from .kick_service import kick_from_context
 from .models import KickResult
-from .errors import SpaceNotFoundError, MaxDepthReachedError
 
 extension = Extension("kick")
 
@@ -38,16 +37,6 @@ async def kick(
 ) -> None:
     result = await kick_from_context(ctx, user_id, reason)
     await ctx.reply(format_kick_result(result))
-
-
-@kick.error(SpaceNotFoundError)
-async def kick_space_error(ctx: Context, error: SpaceNotFoundError) -> None:
-    await ctx.reply(f"Could not complete kick operation: {error}")
-
-
-@kick.error(MaxDepthReachedError)
-async def space_depth_error(ctx: Context, error: MaxDepthReachedError) -> None:
-    await ctx.reply(f"Could not complete the operation: {error}")
 
 
 @kick.error(CheckError)
