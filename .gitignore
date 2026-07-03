@@ -12,3 +12,4 @@ logs/*.log
 config/*.local.yaml
 .idea
 *.db
+settings.json
