@@ -1,162 +1,163 @@
 import pytest
 from matrix.errors import MatrixError
 from types import SimpleNamespace
-from typing import cast
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from bot.extensions.moderation.kick_service import kick_from_context
-from matrix import Context
+from matrix import Context, Room, Space
+from bot.extensions.moderation.kick_service import kick_from_context, kick_from_rooms
+
+
+def as_async_mock(value: Any) -> AsyncMock:
+    return cast(AsyncMock, value)
+
+
+def as_mock(value: Any) -> MagicMock:
+    return cast(MagicMock, value)
+
+
+def mock_room(
+    room_id: str,
+    *,
+    kick_error: Exception | None = None,
+) -> Room:
+    room = MagicMock(spec=Room)
+    room.room_id = room_id
+    room.name = room_id
+
+    if kick_error:
+        cast(Any, room).get_members = AsyncMock(return_value=["@target:example.com"])
+    else:
+        cast(Any, room).get_members = AsyncMock(
+            side_effect=[
+                ["@target:example.com"],
+                [],
+            ]
+        )
+
+    cast(Any, room).kick_user = AsyncMock(side_effect=kick_error)
+
+    return cast(Room, room)
+
+
+def mock_space(room_id: str, children: list[Room | Space]) -> Space:
+    space = MagicMock(spec=Space)
+    space.room_id = room_id
+    space.name = room_id
+    cast(Any, space).get_children = MagicMock(return_value=children)
+    cast(Any, space).kick_user = AsyncMock()
+    return cast(Space, space)
 
 
 @pytest.mark.asyncio
-async def test_kick_from_context__with_no_parent_space__expect_current_room_kicked() -> (
-    None
-):
-    ctx = SimpleNamespace(
-        room=SimpleNamespace(
-            room_id="!room:example.com",
-            kick_user=AsyncMock(),
-        ),
+async def test_kick_from_rooms__skips_when_user_is_not_member() -> None:
+    room = mock_room("!room:example.com")
+    cast(Any, room).get_members = AsyncMock(return_value=[])
+
+    result = await kick_from_rooms(
+        "@target:example.com",
+        [room],
+        reason="spam",
     )
 
-    with patch(
-        "bot.extensions.moderation.kick_service.get_parent_space_id",
-        return_value=None,
-    ):
-        result = await kick_from_context(
-            cast(Context, ctx), "@target:example.com", "spam"
-        )
+    as_async_mock(room.kick_user).assert_not_awaited()
+    assert result.kicked_room_ids == []
+    assert result.failed_room_ids == []
 
-    ctx.room.kick_user.assert_awaited_once_with("@target:example.com", reason="spam")
+
+@pytest.mark.asyncio
+async def test_kick_from_rooms__records_successes_failures_and_dedupes() -> None:
+    successful_room = mock_room("!success:example.com")
+    failed_room = mock_room(
+        "!failed:example.com",
+        kick_error=MatrixError("denied"),
+    )
+
+    result = await kick_from_rooms(
+        "@target:example.com",
+        [successful_room, failed_room, successful_room],
+        reason="spam",
+    )
+
+    as_async_mock(successful_room.kick_user).assert_awaited_once_with(
+        "@target:example.com", reason="spam"
+    )
+    as_async_mock(failed_room.kick_user).assert_awaited_once_with(
+        "@target:example.com", reason="spam"
+    )
+
+    assert result.target_user_id == "@target:example.com"
+    assert result.reason == "spam"
+    assert result.space_id is None
+    assert result.kicked_room_ids == ["!success:example.com"]
+    assert result.failed_room_ids == ["!failed:example.com"]
+
+
+@pytest.mark.asyncio
+async def test_kick_from_rooms__includes_space_id_when_space_provided() -> None:
+    room = mock_room("!room:example.com")
+    space = mock_space("!space:example.com", [])
+
+    result = await kick_from_rooms(
+        "@target:example.com",
+        [room],
+        reason="spam",
+        space=space,
+    )
+
+    assert result.space_id == "!space:example.com"
     assert result.kicked_room_ids == ["!room:example.com"]
     assert result.failed_room_ids == []
 
 
 @pytest.mark.asyncio
-async def test_kick_from_context__with_current_room_matrix_error__expect_current_room_recorded_failed() -> (
-    None
-):
-    ctx = SimpleNamespace(
-        room=SimpleNamespace(
-            room_id="!room:example.com",
-            kick_user=AsyncMock(side_effect=MatrixError("not allowed")),
-        ),
-    )
+async def test_kick_from_context__without_parent_space__kicks_current_room() -> None:
+    current_room = mock_room("!current:example.com")
+    ctx = SimpleNamespace(room=current_room)
 
     with patch(
-        "bot.extensions.moderation.kick_service.get_parent_space_id",
+        "bot.extensions.moderation.kick_service.get_parent_space",
         return_value=None,
     ):
         result = await kick_from_context(
-            cast(Context, ctx), "@target:example.com", "spam"
+            cast(Context, ctx),
+            "@target:example.com",
+            "spam",
         )
 
-    assert result.kicked_room_ids == []
-    assert result.failed_room_ids == ["!room:example.com"]
-
-
-@pytest.mark.asyncio
-async def test_kick_from_context__with_parent_space_targets__expect_successes_and_failures_recorded() -> (
-    None
-):
-    space = SimpleNamespace(room_id="!space:example.com", kick_user=AsyncMock())
-    successful_room = SimpleNamespace(kick_user=AsyncMock())
-    failed_room = SimpleNamespace(
-        kick_user=AsyncMock(side_effect=MatrixError("denied"))
-    )
-
-    bot = MagicMock()
-    bot.get_room.side_effect = lambda room_id: {
-        "!space:example.com": space,
-        "!success:example.com": successful_room,
-        "!failed:example.com": failed_room,
-        "!missing:example.com": None,
-    }[room_id]
-    ctx = SimpleNamespace(
-        room=SimpleNamespace(room_id="!current:example.com"),
-        bot=bot,
-    )
-
-    async def collect_room_ids(_ctx, _space):
-        return [
-            "!success:example.com",
-            "!failed:example.com",
-            "!missing:example.com",
-        ]
-
-    with (
-        patch(
-            "bot.extensions.moderation.kick_service.get_parent_space_id",
-            return_value="!space:example.com",
-        ),
-        patch(
-            "bot.extensions.moderation.kick_service.collect_space_child_room_ids",
-            side_effect=collect_room_ids,
-        ),
-    ):
-        result = await kick_from_context(
-            cast(Context, ctx), "@target:example.com", "spam"
-        )
-
-    successful_room.kick_user.assert_awaited_once_with(
+    as_async_mock(current_room.kick_user).assert_awaited_once_with(
         "@target:example.com", reason="spam"
     )
-    failed_room.kick_user.assert_awaited_once_with("@target:example.com", reason="spam")
-    space.kick_user.assert_awaited_once_with("@target:example.com", reason="spam")
-    assert result.kicked_room_ids == ["!success:example.com", "!space:example.com"]
-    assert result.failed_room_ids == ["!failed:example.com", "!missing:example.com"]
+    assert result.kicked_room_ids == ["!current:example.com"]
+    assert result.failed_room_ids == []
 
 
 @pytest.mark.asyncio
-async def test_kick_from_context__with_nested_space_children__expect_nested_targets_and_parent_space_kicked() -> (
-    None
-):
-    root_space = SimpleNamespace(
-        room_id="!root-space:example.com",
-        room_type="m.space",
-        children=["!nested-space:example.com"],
-        kick_user=AsyncMock(),
+async def test_kick_from_context__with_parent_space__kicks_room_children_only() -> None:
+    child_room = mock_room("!child-room:example.com")
+    child_space = mock_space("!child-space:example.com", [])
+    parent_space = mock_space(
+        "!parent-space:example.com",
+        [child_room, child_space],
     )
-    nested_space = SimpleNamespace(
-        room_id="!nested-space:example.com",
-        room_type="m.space",
-        children=["!leaf-room:example.com"],
-        kick_user=AsyncMock(),
-    )
-    leaf_room = SimpleNamespace(
-        room_id="!leaf-room:example.com",
-        room_type=None,
-        children=[],
-        kick_user=AsyncMock(),
-    )
-
-    bot = MagicMock()
-    bot.get_room.side_effect = lambda room_id: {
-        "!root-space:example.com": root_space,
-        "!nested-space:example.com": nested_space,
-        "!leaf-room:example.com": leaf_room,
-    }[room_id]
-    ctx = SimpleNamespace(
-        room=SimpleNamespace(room_id="!current:example.com"),
-        bot=bot,
-    )
+    ctx = SimpleNamespace(room=mock_room("!current:example.com"))
 
     with patch(
-        "bot.extensions.moderation.kick_service.get_parent_space_id",
-        return_value="!root-space:example.com",
+        "bot.extensions.moderation.kick_service.get_parent_space",
+        return_value=parent_space,
     ):
         result = await kick_from_context(
-            cast(Context, ctx), "@target:example.com", "spam"
+            cast(Context, ctx),
+            "@target:example.com",
+            "spam",
         )
 
-    nested_space.kick_user.assert_awaited_once_with(
+    as_mock(parent_space.get_children).assert_called_once_with(depth=3)
+    as_async_mock(child_room.kick_user).assert_awaited_once_with(
         "@target:example.com", reason="spam"
     )
-    leaf_room.kick_user.assert_awaited_once_with("@target:example.com", reason="spam")
-    root_space.kick_user.assert_awaited_once_with("@target:example.com", reason="spam")
-    assert set(result.kicked_room_ids) == {
-        "!nested-space:example.com",
-        "!leaf-room:example.com",
-        "!root-space:example.com",
-    }
+    as_async_mock(child_space.kick_user).assert_not_awaited()
+
+    assert result.space_id == "!parent-space:example.com"
+    assert result.kicked_room_ids == ["!child-room:example.com"]
     assert result.failed_room_ids == []
