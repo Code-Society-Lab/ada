@@ -85,16 +85,25 @@ def test_format_weather() -> None:
         },
     )
 
-    lines = message.splitlines()
+    lines = message.render()
 
-    assert lines[0] == "### Weather for Paris"
-    assert lines[1] == "<pre>Local time:    1970-01-01 00:00"
-    assert lines[2] == "Description:   Clear Sky"
-    assert lines[3] == "Temperature:   68.00°F | 20.00°C"
-    assert lines[4] == "- Min:         66.20°F | 19.00°C"
-    assert lines[5] == "- Max:         71.60°F | 22.00°C"
-    assert lines[6] == "Feels like:    69.80°F | 21.00°C"
-    assert lines[7] == "Humidity:      52%"
-    assert lines[8] == "Pressure:      1,014 hPa"
-    assert lines[9] == "Visibility:    10,000m | 32,808ft"
-    assert lines[10] == "</pre>"
+    assert "<h2>Weather for Paris</h2>" in lines
+    assert "<table>" in lines
+    assert "<strong>Local time:</strong>" in lines
+    assert "1970-01-01 00:00" in lines
+    assert "<strong>Description:</strong>" in lines
+    assert "Clear Sky" in lines
+    assert "<strong>Temperature:</strong>" in lines
+    assert "68.00°F | 20.00°C" in lines
+    assert "<strong>- Min:</strong>" in lines
+    assert "66.20°F | 19.00°C" in lines
+    assert "<strong>- Max:</strong>" in lines
+    assert "71.60°F | 22.00°C" in lines
+    assert "<strong>Feels like:</strong>" in lines
+    assert "69.80°F | 21.00°C" in lines
+    assert "<strong>Humidity:</strong>" in lines
+    assert "52%" in lines
+    assert "<strong>Pressure:</strong>" in lines
+    assert "1,014 hPa" in lines
+    assert "<strong>Visibility:</strong>" in lines
+    assert "10,000m | 32,808ft" in lines

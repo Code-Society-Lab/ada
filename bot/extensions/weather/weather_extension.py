@@ -37,7 +37,7 @@ async def weather(ctx: Context, *city: str) -> None:
         case WeatherError.UNAVAILABLE:
             await ctx.reply("Weather service is temporarily unavailable.")
         case _:
-            await ctx.reply(format_weather(city_name, result))
+            await ctx.reply(component=format_weather(city_name, result))
 
 
 @weather.error(CheckError)

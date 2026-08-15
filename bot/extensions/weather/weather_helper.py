@@ -1,8 +1,9 @@
 from datetime import UTC, datetime
+from matrix import Table
 from .openweather_service import WeatherPayload
 
 
-def format_weather(city: str, data: WeatherPayload) -> str:
+def format_weather(city: str, data: WeatherPayload) -> Table:
     current_time = _city_time(data["timestamp"]).strftime("%Y-%m-%d %H:%M")
     weather = data["weather"][0]
     main = data["main"]
@@ -25,20 +26,19 @@ def format_weather(city: str, data: WeatherPayload) -> str:
     pressure = main["pressure"]
     visibility = _format_visibility(visibility_m, visibility_ft)
 
-    return (
-        f"### Weather for {city}\n"
-        f"<pre>"
-        f"{'Local time:':<14} {current_time}\n"
-        f"{'Description:':<14} {description}\n"
-        f"{'Temperature:':<14} {temperature}\n"
-        f"{'- Min:':<14} {temp_min}\n"
-        f"{'- Max:':<14} {temp_max}\n"
-        f"{'Feels like:':<14} {feels_like}\n"
-        f"{'Humidity:':<14} {humidity}%\n"
-        f"{'Pressure:':<14} {pressure:,} hPa\n"
-        f"{'Visibility:':<14} {visibility}\n"
-        f"</pre>"
-    )
+    table = Table(title=f"Weather for {city}")
+
+    table.add_field("Local time:", current_time)
+    table.add_field("Description:", description)
+    table.add_field("Temperature:", temperature)
+    table.add_field("Feels like:", feels_like)
+    table.add_field("- Min:", temp_min)
+    table.add_field("- Max:", temp_max)
+    table.add_field("Humidity:", f"{humidity}%")
+    table.add_field("Pressure:", f"{pressure:,} hPa")
+    table.add_field("Visibility:", visibility)
+
+    return table
 
 
 def _city_time(timestamp: int) -> datetime:
