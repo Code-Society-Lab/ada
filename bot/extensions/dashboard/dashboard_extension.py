@@ -1,15 +1,18 @@
+import logging
 import time
 from datetime import date, datetime, timedelta
 from typing import cast
 from zoneinfo import ZoneInfo
 
 import dachshund
+from aiohttp import ClientError
 from matrix import Bot, Context, Extension, Room
-from nio import ReactionEvent, RoomMemberEvent, RoomMessageText
+from nio import ReactionEvent, RoomMemberEvent, RoomMessageText, WhoamiError
 
 from bot.dashboard.latency import LatencyHealth
 from bot.extensions.welcome.welcome_extension import _is_new_join
 
+logger = logging.getLogger(__name__)
 extension = Extension("dashboard")
 
 TIMEZONE = ZoneInfo("America/New_York")
@@ -41,12 +44,18 @@ latency_health = LatencyHealth()
 @extension.hook
 async def on_ready() -> None:
     await latency_health.load()
+    await _check_latency()
     _report_counts()
 
 
 @extension.schedule("* * * * *")
 async def report_counts() -> None:
     _report_counts()
+
+
+@extension.schedule("* * * * *")
+async def check_latency() -> None:
+    await _check_latency()
 
 
 @extension.schedule("5 0 * * *")
@@ -83,7 +92,7 @@ async def on_command(ctx: Context) -> None:
 
 
 def _record_message(room: Room, event: RoomMessageText) -> None:
-    latency_health.record(_latency_ms(event.server_timestamp))
+    latency_health.record_message(_latency_ms(event.server_timestamp))
     dachshund.emit(
         "message",
         date=_today(),
@@ -106,6 +115,23 @@ def _record_member_flow(*, joined: int, left: int) -> None:
 def _record_command(name: str) -> None:
     dachshund.emit("on_command", name=name, value=1)
     dachshund.emit("commands_per_day", date=_today(), value=1)
+
+
+async def _check_latency() -> None:
+    """Time a round trip to the homeserver, the bot's equivalent of a ping."""
+    started = time.perf_counter()
+
+    try:
+        response = await cast(Bot, extension.bot).client.whoami()
+    except (ClientError, TimeoutError) as error:
+        logger.warning("Latency check failed: %s", error)
+        return
+
+    if isinstance(response, WhoamiError):
+        logger.warning("Latency check failed: %s", response.message)
+        return
+
+    latency_health.record_check(round((time.perf_counter() - started) * 1000))
 
 
 def _report_counts() -> None:

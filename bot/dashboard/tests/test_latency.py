@@ -14,26 +14,41 @@ def emit() -> Iterator[MagicMock]:
         yield mock
 
 
-def test_first_reading_is_the_average(emit: MagicMock) -> None:
+def test_first_check_is_the_average(emit: MagicMock) -> None:
     health = LatencyHealth()
-    health.record(100)
+    health.record_check(100)
 
     assert health.average_ms == 100
     emit.assert_has_calls(
-        [call("latency", value=100), call("average_latency", value=100)]
+        [
+            call("latency", check=100, message=None),
+            call("average_latency", value=100),
+        ]
     )
 
 
-def test_later_readings_move_average_by_alpha(emit: MagicMock) -> None:
+def test_later_checks_move_average_by_alpha(emit: MagicMock) -> None:
     health = LatencyHealth()
-    health.record(100)
-    health.record(200)
+    health.record_check(100)
+    health.record_check(200)
 
     assert health.average_ms == pytest.approx(120)
 
 
+def test_message_latency_is_shown_but_left_out_of_health(emit: MagicMock) -> None:
+    health = LatencyHealth(average_ms=100)
+    health.record_message(900)
+
+    assert health.average_ms == 100
+    emit.assert_called_once_with("latency", check=None, message=900)
+
+
 async def test_load_replays_stored_readings(emit: MagicMock) -> None:
-    stored = [SimpleNamespace(payload={"value": v}) for v in (100, None, 200)]
+    stored = [
+        SimpleNamespace(payload={"check": 100, "message": None}),
+        SimpleNamespace(payload={"check": None, "message": 900}),
+        SimpleNamespace(payload={"check": 200, "message": None}),
+    ]
     store = SimpleNamespace(
         events=SimpleNamespace(events=AsyncMock(return_value=stored))
     )

@@ -32,9 +32,13 @@ with overview_page.row():
                 "worst_latency",
                 title="Worst Latency (24h)",
                 source="latency",
+                # The scheduled check, not message delivery delays.
+                y="check",
                 aggregate="max",
                 over=timedelta(hours=24),
                 unit="ms",
             )
         )
-    overview_page.add(TimeSeriesChart("latency", title="Live Latency"))
+    overview_page.add(
+        TimeSeriesChart("latency", title="Live Latency", y=["check", "message"])
+    )

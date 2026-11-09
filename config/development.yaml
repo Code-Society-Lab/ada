@@ -19,5 +19,5 @@ extensions:
 
 dashboard:
   host: "${DASHBOARD_HOST|127.0.0.1}"
-  port: "${PORT|4242}"
+  port: "${DASHBOARD_PORT|1212}"
   event_store: "${DACHSHUND_EVENT_STORE_PATH|dachshund.db}"

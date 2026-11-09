@@ -3,16 +3,18 @@ from collections.abc import Iterator
 from datetime import date
 from types import SimpleNamespace
 from typing import Any, cast
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
+from aiohttp import ClientError
 from matrix import Room
-from nio import RoomMemberEvent, RoomMessageText
+from nio import RoomMemberEvent, RoomMessageText, WhoamiError, WhoamiResponse
 
 from bot.extensions.dashboard import dashboard_extension
 from bot.extensions.dashboard.dashboard_extension import (
     DAILY_SOURCES,
     TRIM_SPAN,
+    _check_latency,
     _is_leave,
     _latency_ms,
     _record_command,
@@ -110,7 +112,7 @@ def test_record_message_emits_latency_and_message(emit: MagicMock) -> None:
     _record_message(_room("invite"), cast(RoomMessageText, event))
 
     assert emit.mock_calls[0].args == ("latency",)
-    assert emit.mock_calls[1].args == ("average_latency",)
+    assert emit.mock_calls[0].kwargs["check"] is None
     emit.assert_called_with(
         "message", date=TODAY, author="@a:x", room="private", value=1
     )
@@ -144,3 +146,38 @@ def test_record_command_emits_name_and_day(emit: MagicMock) -> None:
             call("commands_per_day", date=TODAY, value=1),
         ]
     )
+
+
+def _bot_whoami(**whoami: Any) -> SimpleNamespace:
+    return SimpleNamespace(client=SimpleNamespace(whoami=AsyncMock(**whoami)))
+
+
+async def test_check_latency_records_round_trip(emit: MagicMock) -> None:
+    bot = _bot_whoami(return_value=MagicMock(spec=WhoamiResponse))
+
+    with (
+        patch.object(dashboard_extension.extension, "_bot", bot),
+        patch.object(dashboard_extension.latency_health, "record_check") as record,
+    ):
+        await _check_latency()
+
+    record.assert_called_once()
+    assert record.call_args.args[0] >= 0
+
+
+@pytest.mark.parametrize(
+    "whoami",
+    [
+        {"return_value": WhoamiError("M_UNKNOWN_TOKEN")},
+        {"side_effect": ClientError("connection reset")},
+        {"side_effect": TimeoutError()},
+    ],
+)
+async def test_check_latency_skips_failed_checks(whoami: dict[str, Any]) -> None:
+    with (
+        patch.object(dashboard_extension.extension, "_bot", _bot_whoami(**whoami)),
+        patch.object(dashboard_extension.latency_health, "record_check") as record,
+    ):
+        await _check_latency()
+
+    record.assert_not_called()
