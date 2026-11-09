@@ -12,4 +12,9 @@ logs/*.log
 config/*.local.yaml
 .idea
 *.db
+
+# Dachshund's event store (SQLite in WAL mode)
+dachshund.db
+dachshund.db-wal
+dachshund.db-shm
 settings.json

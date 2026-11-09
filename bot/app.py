@@ -8,6 +8,7 @@ from sqlmodel import SQLModel
 from pelican import get_runner, get_registry
 
 from bot import ada
+from bot.dashboard import dashboard
 from bot.config import BotConfig
 
 logger = logging.getLogger(__name__)
@@ -26,8 +27,11 @@ def start(config_file: str) -> None:
     config = BotConfig(config_file)
 
     _load_logging(config)
+    # Before extensions, whose on_load emits to the dashboard.
+    _load_dashboard(config)
     _load_extensions(config)
     _load_database(config)
+    _start_dashboard(config)
     _show_app_info(config)
 
     ada.bot.start(config=config)
@@ -36,6 +40,23 @@ def start(config_file: str) -> None:
 def _load_extensions(config: BotConfig) -> None:
     for extension in config.extensions:
         ada.bot.load_extension(extension)
+
+
+def _load_dashboard(config: BotConfig) -> None:
+    dashboard.init_dachshund(_event_store(config))
+    dashboard.build_dashboard()
+
+
+def _start_dashboard(config: BotConfig) -> None:
+    dashboard.start_dashboard(
+        path=_event_store(config),
+        host=config.get("host", section="dashboard", default="127.0.0.1"),
+        port=int(config.get("port", section="dashboard", default=1212)),
+    )
+
+
+def _event_store(config: BotConfig) -> str:
+    return str(config.get("event_store", section="dashboard", default="dachshund.db"))
 
 
 def _load_logging(config: BotConfig) -> None:
