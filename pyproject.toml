@@ -14,7 +14,9 @@ dependencies = [
     "click==8.3.2",
     "sqlmodel-toolkit @ git+https://github.com/Code-Society-Lab/sqlmodel-toolkit.git",
     "pelican-migration>=0.1.2a0",
-    "requests==2.33.1"
+    "requests==2.33.1",
+    "dachshund==0.1.0",
+    "tzdata",
 ]
 
 [project.optional-dependencies]
@@ -34,6 +36,9 @@ ada = "bot.cli:cli"
 
 [tool.setuptools.packages.find]
 include = ["bot*"]
+
+[tool.setuptools.package-data]
+bot = ["dashboard/widgets/*/*.js", "dashboard/widgets/*/*.css"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "bot"]

@@ -16,3 +16,8 @@ extensions:
     room: "${ADA_MAIN_ROOM|}"
   weather:
     api_key: "${ADA_OPENWEATHER_API_KEY|}"
+
+dashboard:
+  host: "${DASHBOARD_HOST|127.0.0.1}"
+  port: "${PORT|4242}"
+  event_store: "${DACHSHUND_EVENT_STORE_PATH|dachshund.db}"
